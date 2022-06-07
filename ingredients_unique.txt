@@ -1,0 +1,84 @@
+Adobo Chile
+Apple
+Asparagus
+Bacon
+Baking Powder
+Basil
+Beans
+Beef
+Beets
+Bell Pepper
+Breadcrumbs
+Broccoli
+Brussels Sprouts 
+Buckwheat
+Butter
+Cabbage
+Capers
+Carrots
+Cheese
+Chia
+Chicken
+Chickpeas
+Chocolate Chips
+Cilantro
+Coconut milk
+Corn Meal
+Couscous
+Cucumber
+Dijon Mustard
+Dill
+Eggs
+Fish
+Flour
+Garlic
+Ginger
+Green Onion
+Ham
+Jalopeno Pepper
+Kale
+Kielbasa
+Lemon
+Lentils
+Lime
+Mango
+Marinara Sauce
+Milk
+NULL
+Noodles
+Onion
+Orzo
+Parsley
+Parsnips
+Peanut
+Peas
+Pesto
+Pork
+Potatoes
+Prosciutto
+Quinoa
+Raisins
+Red onion
+Rice
+Salmon
+Sardine
+Sausage
+Shallots
+Sour Cream
+Soy Sauce
+Spinach
+Squash
+Sweet potato
+Tilapia
+Tomatillo
+Tomatoes
+Tuna
+Turkey
+Vegetarian
+Vegetarian
+Water chestnuts
+Wine
+Yeast
+Yogurt
+celery
+gnocchi

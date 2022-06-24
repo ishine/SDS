@@ -1,10 +1,75 @@
-# user informable slots are name, department and position
+rule hello(): "(\\b|^|\\ )(hi|hello|howdy|hey)\\b"
+rule bye(): "(\\b|^|\\ )(bye(-)?(bye)?|good(-)?bye|that'?s?\\ (is\\ )*all)(\\s|$|\\ |\\.)"
+rule deny(): "((\\b|^|\\ )(n(o)?|wrong|incorrect|error|nope)|(not\\ (true|correct|right)))(\\s)?$"
+rule affirm(): "((yes|yeah|(\\b|^)ok\\b|(\\b|^)OK|okay|sure|^y$|(\\b|^)yep(\\b|$)|(that('?s| is) )?(?<!not\\ )(?<!no\\ )(right|correct|confirm)))(\\s)?$"
+rule thanks(): "(?=.*(^(\\ )*)(((great|good|awesome|nice|cool)\\ )?((that((')?s|\\ (is|was))\\ (very\\ )?helpful)\\ )?(thank|thank(s|\\ you)(\\ (very|so)\\ much)?)(\\ (that((')?s|\\ (is|was))\\ (very\\ )?helpful))?|((great|good|awesome|nice|cool)\\ )?(that((')?s|\\ (is|was))\\ (very\\ )?helpful)|(great|good|awesome|nice|cool))((\\ )*))(?=^(?:(?!bye).)*$).*$"
+rule repeat(): "(\\b|^|\\ )(repeat((\\ that )|(\\ it))?)|(say((\\ that )|(\\ it))\\ again)|(again)"
+rule reqalts(): "(\\b|^|\\ )((something|anything)\\ else)|(different(\\ one)*)|(another\\ one)|(alternatives*)|(other options*)|((don'*t|do not) (want|like)\\ (that|this)(\\ one)*)"
+rule ack(): "{IMPOSSIBLEREGEX()}"
+rule bad(): "{IMPOSSIBLEREGEX()}"
 
-rule inform(ingredient)
-    "I want to cook something with {ingredient}"
-    "Suggest me some recipe with {ingredient}"
+# ----------------------
+# user informable slots 
+# ----------------------
 
-# All slots are requestable
+rule inform(ingredients)
+    "I want to cook something with {ingredients}"
+    "Suggest me some recipe with {ingredients}"
+
+rule inform(ease)
+    "Suggest me some recipe that is {ease} to make"
+
+rule inform(cookbook)
+    "I want to cook something from {cookbook}"
+
+rule inform(name)
+    "I want to cook {name}"
+
+rule inform(prep_time)
+    "I want to cook something in {prep_time} minutes"
+
+rule inform(type)
+    "I want to cook some {type} food"
+
+rule inform(rating)
+    "I want to cook something rated with {rating} stars"
+
+# ----------------------
+# Requestable slots
+# ----------------------
+
+rule request(name)
+    "what do you want to cook"
+
+rule request(prep_time)
+    "what is the preparation time of this recipe" 
+
+rule request(cookbook)
+    "from which cookbook is this recipe from"
+
+rule request(page)
+    "on which page of the cookbook is this recipe"
+
+rule request(ingredients)
+    "what are the ingredients of this recipe"
+
+rule request(last_made)
+    "when did I last make this recipe"
+
+rule request(ease)
+    "how easy is this recipe"
+
+rule request(rating)
+    "what is the rating of this recipe"
+
+rule request(type)
+    "what kind of dish is this"
+
+rule request(notes)
+    "do I have any notes on that recipe"
+
+rule request(make_it_next)
+    "did I mark this as make it next"
 
 
 

@@ -110,7 +110,7 @@ class RegexFile:
         for rule in self._rules[user_act.type.value]:
             if rule.is_applicable(slots):
                 return rule.apply(slots)
-        raise BaseException('No rule was found for the given system act.')
+        raise BaseException(f'No rule was found for the given system act: {str(user_act)}')
 
     def _create_memory_from_user_act(self, user_act: UserAct) -> Memory:
         slots = Memory(self.global_memory)

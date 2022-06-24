@@ -24,15 +24,64 @@ from services.hci import ConsoleOutput
 # import dialog system class
 from services.service import DialogSystem
 
+from recipe_project.domain import RecipeDomain
+from recipe_project.policy import RecipePolicy
+from recipe_project.nlg import RecipeNLG
+
+if __name__ == "__main__":
 
 
-# 1. Create a JSONLookupDomain object for the "superhero" domain
-domain = JSONLookupDomain('Recipes', display_name="Recipes")
+    # setup logger
+    file_log_lvl            = LogLevel["INFO"]
+    log_lvl                 = LogLevel["INFO"]
+    conversation_log_dir    = './conversation_logs'
+    speech_log_dir          = None
 
 
-# 2. For each service, create an object, don't forget to pass the correct domain as an argument
-#    Refer back to the last section of the tutorial if you have trouble
+    logger = DiasysLogger(file_log_lvl=file_log_lvl,
+                          console_log_lvl=log_lvl,
+                          logfile_folder=conversation_log_dir,
+                          logfile_basename="full_log")
 
-# 3. Create a dialog system object and register all the necessary services to it
 
-# 4. Add code to run your dialog system
+    # logger = None
+
+    #
+    # 1. Create a JSONLookupDomain object for the "recipes" domain
+    domain = RecipeDomain()
+
+
+    # 2. For each service, create an object, don't forget to pass the correct domain as an argument
+    #    Refer back to the last section of the tutorial if you have trouble
+
+    # todo
+    # nlu     = RecipeNLU(domain=domain)
+    nlu     = HandcraftedNLU(domain = domain, logger=logger)
+    nlg     = RecipeNLG(domain = domain, logger = logger)
+
+    # ?
+    # bst     = HandcraftedBST(domain=domain)
+    policy  = RecipePolicy(domain = domain, logger = logger)
+
+    user_in = ConsoleInput(domain= "")
+    user_out = ConsoleOutput(domain="")
+
+    d_tracker = DomainTracker(domains=[domain])
+
+
+    # 3. Create a dialog system object and register all the necessary services to it
+    system    = DialogSystem(
+        services=[d_tracker, user_in, user_out, nlu, policy, nlg], 
+        debug_logger=logger)
+
+
+
+    if not system.is_error_free_messaging_pipeline():
+        system.print_inconsistencies()
+
+    system.draw_system_graph(name='system', show=False)
+    # 4. Add code to run your dialog system
+    print("run_dialog()")
+    system.run_dialog({'gen_user_utterance': ""})
+    print("shutdown()")
+    system.shutdown()

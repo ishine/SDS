@@ -266,11 +266,11 @@
             "150"
         ],
         "rating": [
-            1,
-            2,
-            3,
-            4,
-            5
+            "1",
+            "2",
+            "3",
+            "4",
+            "5"
         ],
         "type": [
             "Baking Basics",
@@ -286,6 +286,7 @@
     "requestable": [
         "rating",
         "ease",
+        "name",
         "notes",
         "type",
         "prep_time",

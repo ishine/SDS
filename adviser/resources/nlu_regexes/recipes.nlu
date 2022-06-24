@@ -1,0 +1,64 @@
+# user informable slots are name, department and position
+
+rule inform(ingredient)
+    "I want to cook something with {ingredient}"
+    "Suggest me some recipe with {ingredient}"
+
+# All slots are requestable
+
+
+
+
+# synonyms
+
+function synonyms(slot, value)
+    "{value}"
+  
+    #add_if slot = "name"
+
+    #add_if slot = "last_known_location"
+
+    #add_if slot = "description"
+
+    #add_if slot = "real_name"
+
+    add_if slot = "main_superpower"
+        if value = "strength"
+            "super strength"
+        if value = "martial arts"
+            "fighting"
+    
+    add_if slot = "loyalty"
+        if value = "he works best alone"
+            "alone"
+            "himself"
+
+
+function slot_synonyms(slot)
+    "{IMPOSSIBLEREGEX()}"
+
+    if slot = "name"
+        "name"
+        "{domain_vocab()}('s)? name"
+        "name of the {domain_vocab()}"
+    if slot = "primary_uniform_color"
+        "colo(u)?r(s)?"
+        "(primary|main) colo(u)?r(s)?"
+    if slot = "main_superpower"
+        "(main|primary)? skill(s)?"
+        "(main|primary)? power(s)?"
+        "(main|primary)? talent(s)?"
+    if slot = "last_known_location"
+        "location"
+        "address"
+        "last (known)? location"
+        "last (known)? address"
+    if slot = "loyalty"
+        "loyalty"
+        "team"
+    if slot = "description"
+        "description"
+    if slot = "real_name"
+        "secret identity"
+        "real name"
+        "alias(es)?"

@@ -56,10 +56,9 @@ class RecipeNLG(Service):
                 return {'sys_utterance': 'Which city are you at?'}
             else:
                 assert False, 'Only the date and the location can be requested'
+        elif sys_act.type == SysActionType.InformByName:
+            answer = sys_act.slot_values['answer']
+            return {'sys_utterance': answer }
+            
         else:
-            location = sys_act.slot_values['location'][0]
-            date = sys_act.slot_values['date'][0]
-            date_str = date.strftime('on %B %-d at %-I %p')
-            temperature = sys_act.slot_values['temperature'][0]
-            description = sys_act.slot_values['description'][0]
-            return {'sys_utterance': f'The weather in {location} {date_str} is {temperature} degrees celsius with {description}.'}
+            return {'sys_utterance': 'nothing defined for this sys act yet' }

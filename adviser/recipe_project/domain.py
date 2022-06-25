@@ -31,6 +31,10 @@ SLOT_VALUES = {
     'pork': ['true', 'false'],
 }
 
+def get_root_dir():
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
 
 class RecipeDomain(JSONLookupDomain):
     """Domain for the Mensa API
@@ -43,33 +47,6 @@ class RecipeDomain(JSONLookupDomain):
         JSONLookupDomain.__init__(self, 'recipes', 'resources/ontologies/recipes.json', 'resources/databases/recipes.db', 'Recipes')
         self.last_results = []
 
-    def find_entities(self, constraints: dict, requested_slots: Iterable = iter(())):
-        """ Returns all entities from the data backend that meet the constraints.
-
-        Args:
-            constraints (dict): Slot-value mapping of constraints.
-                                If empty, all entities in the database will be returned.
-            requested_slots (Iterable): list of slots that should be returned in addition to the
-                                        system requestable slots and the primary key
-        """
-        print(f"find_entities()")
-        # if 'day' in constraints:
-        #     meals = self.parser.get_meals(constraints['day'])
-        #     results = [meal.as_dict() for meal in meals]
-        #     for slot in constraints:
-        #         if slot == 'day':
-        #             continue
-        #         results = [candidate for candidate in results if candidate[slot] == constraints[slot]]
-        #     for i, result in enumerate(results):
-        #         result['artificial_id'] = i+1
-        #     if list(requested_slots):
-        #         cleaned_results = [{slot: result_dict[slot] for slot in requested_slots} for result_dict in results]
-        #     else:
-        #         cleaned_results = results
-        #     self.last_results = results
-        #     return cleaned_results
-        # else:
-        #     return []
 
     def find_info_about_entity(self, entity_id: str, requested_slots: Iterable):
         """ Returns the values (stored in the data backend) of the specified slots for the
@@ -82,6 +59,14 @@ class RecipeDomain(JSONLookupDomain):
         result = {slot: self.last_results[int(entity_id)-1][slot] for slot in requested_slots}
         result['artificial_id'] = entity_id
         return [result]
+
+    def find_recipes_by_ingredients(self, ingredients: List[str]):
+
+        iq      = " OR lower(ingredients) LIKE ".join([f"'%{i.lower()}%'" for i in ingredients])
+        query   = f"SELECT * FROM data WHERE ingredients LIKE {iq}"
+
+        return self.query_db(query)
+
 
     def get_requestable_slots(self) -> List[str]:
         """ Returns a list of all slots requestable by the user. """

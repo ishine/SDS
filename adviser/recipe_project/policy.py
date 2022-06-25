@@ -34,6 +34,8 @@ class RecipePolicy(Service):
         # only call super class' constructor
         Service.__init__(self, domain=domain, debug_logger=logger)
 
+        self.sys_state = {}
+
     @PublishSubscribe(sub_topics=["user_acts"], pub_topics=["sys_act", "sys_state"])
     def generate_sys_acts(self, user_acts: List[UserAct] = None) -> dict(sys_acts=List[SysAct]):
         """Generates system acts by looking up answers to the given user question.
@@ -46,28 +48,27 @@ class RecipePolicy(Service):
             dict with 'sys_acts' as key and list of system acts as value
         """
         self.debug_logger.info(f"Policy(): generate_sys_acts()")
-        if user_acts is None:
-            return { 'sys_act': SysAct(SysActionType.Welcome), 'sys_state': {}}
-        elif any([user_act.type == UserActionType.Bye for user_act in user_acts]):
-            return { 'sys_act': SysAct(SysActionType.Bye), 'sys_state': {} }
-        elif not user_acts:
-            return { 'sys_act': SysAct(SysActionType.Bad), 'sys_state': {} }
-        
-        user_acts = [user_act for user_act in user_acts if user_act.type != UserActionType.SelectDomain]
-        if len(user_acts) == 0:
-           return { 'sys_act': SysAct(SysActionType.Welcome)} 
+        if user_acts is None or len(user_acts) == 0:
+            return { 'sys_act': SysAct(SysActionType.Welcome), 'sys_state': self.sys_state}
 
-        # relation = [user_act.value for user_act in user_acts \
-        #     if user_act.type == UserActionType.Inform and user_act.slot == 'relation'][0]
-        # topics = [user_act.value for user_act in user_acts \
-        #     if user_act.type == UserActionType.Inform and user_act.slot == 'topic']
-        # direction = [user_act.value for user_act in user_acts \
-        #     if user_act.type == UserActionType.Inform and user_act.slot == 'direction'][0]
+        # assume one user act for now
+        ua = user_acts[0]
+
+        if ua.type == UserActionType.Hello: 
+            return { 'sys_act': SysAct(SysActionType.Welcome), 'sys_state': self.sys_state }
+
+        if ua.type == UserActionType.Bye:
+            return { 'sys_act': SysAct(SysActionType.Bye), 'sys_state': self.sys_state }
+
+        if ua.type == UserActionType.Inform and ua.slot == 'ingredients':
+            answer = self._inform_ingredients(ua.value)
+            return self._inform(answer)
+
 
         # if not topics:
         #     return { 'sys_acts': [SysAct(SysActionType.Bad)] }
 
-        # # currently, short answers are used for world knowledge
+        # # currently, short answersInformByName are used for world knowledge
         # answers = self._get_short_answers(relation, topics, direction)
 
         # sys_acts = [SysAct(SysActionType.InformByName, slot_values=answer) for answer in answers]
@@ -76,39 +77,18 @@ class RecipePolicy(Service):
             # [str(sys_act) for sys_act in sys_acts]))
         # return {'sys_acts': sys_acts}
 
-    def _get_short_answers(self, relation: str, topics: List[str], direction: str) \
-        -> dict(answer=str):
-        """Looks up answers and only returns the answer string"""
-        answers = []
-        for topic in topics:
-            triples = self.domain.find_entities({
-                'relation': relation,
-                'topic': topic,
-                'direction': direction
-            })
-            for triple in triples:
-                if direction == 'in':
-                    answers.append({'answer': triple['subject']})
-                else:
-                    answers.append({'answer': triple['object']})
-        if not answers:
-            answers.append({'answer': 'Sorry, I don\'t know.'})
-        return answers
+    def _inform(self, answer: str) -> dict:
+        return { 'sys_act': SysAct(SysActionType.InformByName, slot_values=answer), 'sys_state': self.sys_state }
 
-    def _get_triples(self, relation, topics, direction):
-        """Looks up answers and stores them as triples"""
-        answers = []
-        for topic in topics:
-            answers.extend(self.domain.find_entities({
-                'relation': relation,
-                'topic': topic,
-                'direction': direction
-            }))
-        if not answers:
-            for topic in topics:
-                answers.append({
-                    'subject': 'unknown' if direction == 'in' else topic,
-                    'predicate': relation,
-                    'object': 'unknown' if direction == 'out' else topic
-                })
-        return answers
+    def _inform_ingredients(self, value: str) -> dict:
+
+        found = self.domain.find_recipes_by_ingredients([value])
+
+        if len(found) > 1:
+            self.sys_state['waiting_for_filter'] = found
+            return { 'answer': 'I found multiple recipes.' }
+
+
+        return { 'answer': str(found) }
+
+

@@ -67,6 +67,17 @@ class RecipeDomain(JSONLookupDomain):
 
         return self.query_db(query)
 
+    def find_recipes_by_name(self, name: str):
+
+        query   = f"SELECT * FROM data WHERE LOWER(name) LIKE '%{name.lower()}%'"
+
+        return self.query_db(query)
+
+    def find_recipes_by_ease(self, ease: str):
+
+        query   = f"SELECT * FROM data WHERE LOWER(ease) = '{ease.lower()}'"
+        return self.query_db(query)
+
 
     def get_requestable_slots(self) -> List[str]:
         """ Returns a list of all slots requestable by the user. """

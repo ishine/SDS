@@ -37,6 +37,12 @@ class SysActionType(Enum):
     Bye = 'closingmsg'
     ConfirmRequest = 'confreq'
 
+    FoundSome = 'found_some'
+    FoundOne = 'found_one'
+    FoundTooMany = 'found_too_many'
+    NotFound = 'not_found'
+
+
 
 class SysAct(object):
 

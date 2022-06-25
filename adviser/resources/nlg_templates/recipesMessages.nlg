@@ -50,6 +50,28 @@ template inform_alternatives(name, *slots)
 		"There is no other course which also {for_entry(slots, "info", ", ", " and ", name)}."
 
 
+#------------------------ Not found ----------------------------------#
+
+template not_found()
+	"Sorry, I did not find anything in my database."
+	"Sorry, I cannot find anything in my database for that."
+
+#------------------------ Found one ----------------------------------#
+
+template found_one(name)
+	"I found a recipe, it is called {name}."
+
+#------------------------ Found some ----------------------------------#
+
+template found_some(names)
+	"I found some recipes, they are {names}."
+
+#------------------------ Found too many ----------------------------------#
+
+template found_too_many()
+	"I found too many recipes for that, can you narrow down a bit?"
+	"A lot of recipes match your request, can you narrow down a bit?"
+
 # ----------------------------System Confirm----------------------------------#
 
 template confirm()

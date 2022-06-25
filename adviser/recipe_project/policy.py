@@ -66,41 +66,84 @@ class RecipePolicy(Service):
             return { 'sys_act': SysAct(SysActionType.Bye), 'sys_state': self.sys_state }
 
         if ua.type == UserActionType.Inform and ua.slot == 'ingredients':
-            answer, cnt = self._inform_ingredients(ua.value)
-            return self._inform(answer)
+            a, cnt = self._inform_ingredients(ua.value)
+            return self._recipe_answer(a, cnt)
 
         if ua.type == UserActionType.Inform and ua.slot == 'name':
-            answer, cnt = self._inform_ingredients(ua.value)
-            if cnt == 1:
-                return self._inform(answer)
-            else:
-                return self._select(answer)
+            a, cnt = self._fetch_by_name(ua.value)
+            return self._recipe_answer(a, cnt)
+
+        if ua.type == UserActionType.Inform and ua.slot == 'ease':
+            a, cnt = self._fetch_by_ease(ua.value)
+            return self._recipe_answer(a, cnt)
+
+    
+    def _recipe_answer(self, answer: dict, cnt: int) -> dict:
+        if cnt == 0:
+            return self._not_found()
+        if cnt == 1:
+            return self._found_one(answer)
+        if cnt < 5:
+            return self._found_some(answer)
+
+        return self._found_too_many()
 
 
-        # if not topics:
-        #     return { 'sys_acts': [SysAct(SysActionType.Bad)] }
+    def _not_found(self) -> dict:
+        return { 'sys_act': SysAct(SysActionType.NotFound), 'sys_state': self.sys_state }
 
-        # # currently, short answersInformByName are used for world knowledge
-        # answers = self._get_short_answers(relation, topics, direction)
 
-        # sys_acts = [SysAct(SysActionType.InformByName, slot_values=answer) for answer in answers]
-
-        # self.debug_logger.dialog_turn("System Action: " + '; '.join(
-            # [str(sys_act) for sys_act in sys_acts]))
-        # return {'sys_acts': sys_acts}
-
-    def _inform(self, answer: dict) -> dict:
+    def _found_some(self, answer: dict) -> dict:
 
         if not isinstance(answer, dict):
             raise Exception(f"answer should be a dictionary, but is {str(type(answer))}")
+        
+        return { 'sys_act': SysAct(SysActionType.FoundSome, slot_values=answer), 'sys_state': self.sys_state }
 
-        return { 'sys_act': SysAct(SysActionType.InformByName, slot_values=answer), 'sys_state': self.sys_state }
+    def _found_one(self, answer: dict) -> dict:
 
-    def _select(self, answer: dict) -> dict:
         if not isinstance(answer, dict):
             raise Exception(f"answer should be a dictionary, but is {str(type(answer))}")
+        
+        return { 'sys_act': SysAct(SysActionType.FoundOne, slot_values=answer), 'sys_state': self.sys_state }
 
-        return { 'sys_act': SysAct(SysActionType.Select, slot_values=answer), 'sys_state': self.sys_state }
+    def _found_too_many(self) -> dict:
+
+        return { 'sys_act': SysAct(SysActionType.FoundTooMany), 'sys_state': self.sys_state }
+
+    def _fetch_by_name(self, value: str) -> dict:
+
+        found   = self.domain.find_recipes_by_name(value)
+        flen    = len(found)
+
+        if flen > 1:
+            self.sys_state['waiting_for_filter'] = foun    
+            self.sys_state['current_suggested_recipe'] = None
+            return ({ 'name': ',\n'.join(r['name'] for r in found)}, flen)
+
+        elif flen == 1:
+            self.sys_state['waiting_for_filter'] = None
+            self.sys_state['current_suggested_recipe'] = found[0]
+            return ({ 'name':  found[0]['name']}, flen)
+        
+        return (None, 0)
+
+    def _fetch_by_ease(self, value: str) -> dict:
+
+        found   = self.domain.find_recipes_by_ease(value)
+        flen    = len(found)
+
+        if flen > 1:
+            self.sys_state['waiting_for_filter'] = found
+            self.sys_state['current_suggested_recipe'] = None
+            return ({ 'name': ',\n'.join(r['name'] for r in found)}, flen)
+
+        elif flen == 1:
+            self.sys_state['waiting_for_filter'] = None
+            self.sys_state['current_suggested_recipe'] = found[0]
+            return ({ 'name':  found[0]['name']}, flen)
+        
+        return (None, 0)
 
     def _inform_ingredients(self, value: str) -> dict:
 
@@ -109,7 +152,7 @@ class RecipePolicy(Service):
         if len(found) > 1:
             self.sys_state['waiting_for_filter'] = found
             self.sys_state['current_suggested_recipe'] = None
-            return ({ 'name': ',\n'.join(r['name'] for r in found)}, len(found))
+            return ({ 'names': ',\n'.join(r['name'] for r in found)}, len(found))
 
         elif len(found) == 1:
             self.sys_state['waiting_for_filter'] = None

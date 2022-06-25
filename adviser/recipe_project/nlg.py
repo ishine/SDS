@@ -20,6 +20,7 @@
 from utils import DiasysLogger
 from utils import SysAct, SysActionType
 from services.service import Service, PublishSubscribe
+import random
 
 
 
@@ -42,12 +43,23 @@ class RecipeNLG(Service):
         """
 
         if sys_act is None or sys_act.type == SysActionType.Welcome:
-            return {'sys_utterance': 'Hi! What do you want to know about the weather?'}
+            return {'sys_utterance': random.choice([
+                'Hi! This is your friendly recipe bot, how can I help you?',
+                'Hello, I am the recipe bot. Let me know if I can help you in any way.'
+            ])}
 
         if sys_act.type == SysActionType.Bad:
-            return {'sys_utterance': 'Sorry, I could not understand you.'}
+            return {'sys_utterance': random.choice([
+                'Sorry, I could not understand you.',
+                'I\'m afraid I don\'t understand.'
+            ])}
         elif sys_act.type == SysActionType.Bye:
-            return {'sys_utterance': 'Thank you, good bye'}
+            return {'sys_utterance': 
+            random.choice(['Thank you, good bye.',
+            'I hope I could be of any help, see you.',
+            'Always glad to help. Bye!'
+            ]) }
+
         elif sys_act.type == SysActionType.Request:
             slot = list(sys_act.slot_values.keys())[0]
             if slot == 'date':
@@ -56,6 +68,7 @@ class RecipeNLG(Service):
                 return {'sys_utterance': 'Which city are you at?'}
             else:
                 assert False, 'Only the date and the location can be requested'
+
         elif sys_act.type == SysActionType.InformByName:
             answer = sys_act.slot_values['answer']
             return {'sys_utterance': answer }

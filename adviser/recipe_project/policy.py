@@ -34,7 +34,10 @@ class RecipePolicy(Service):
         # only call super class' constructor
         Service.__init__(self, domain=domain, debug_logger=logger)
 
-        self.sys_state = {}
+        self.sys_state = { 
+            'waiting_for_filter': [],
+            'last_user_act': None
+        }
 
     @PublishSubscribe(sub_topics=["user_acts"], pub_topics=["sys_act", "sys_state"])
     def generate_sys_acts(self, user_acts: List[UserAct] = None) -> dict(sys_acts=List[SysAct]):
@@ -47,12 +50,13 @@ class RecipePolicy(Service):
         Returns:
             dict with 'sys_acts' as key and list of system acts as value
         """
-        self.debug_logger.info(f"Policy(): generate_sys_acts()")
         if user_acts is None or len(user_acts) == 0:
             return { 'sys_act': SysAct(SysActionType.Welcome), 'sys_state': self.sys_state}
 
         # assume one user act for now
-        ua = user_acts[0]
+        ua                              = user_acts[0]
+        last_ua                         = self.sys_state['last_user_act']
+        self.sys_state['last_user_act'] = ua
 
         if ua.type == UserActionType.Hello: 
             return { 'sys_act': SysAct(SysActionType.Welcome), 'sys_state': self.sys_state }
@@ -86,7 +90,7 @@ class RecipePolicy(Service):
 
         if len(found) > 1:
             self.sys_state['waiting_for_filter'] = found
-            return { 'answer': 'I found multiple recipes.' }
+            return { 'answer': 'I found multiple recipes:\n' + '\n'.join(r['name'] for r in found) }
 
 
         return { 'answer': str(found) }

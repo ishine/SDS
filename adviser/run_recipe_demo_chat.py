@@ -33,26 +33,23 @@ print(sys.path)
 if __name__ == "__main__":
 
     # setup logger
-    file_log_lvl = LogLevel["INFO"]
-    log_lvl = LogLevel["INFO"]
-    conversation_log_dir = './conversation_logs'
-    speech_log_dir = None
+    file_log_lvl            = LogLevel["ERRORS"]
+    log_lvl                 = LogLevel["ERRORS"]
+    conversation_log_dir    = './conversation_logs'
+    speech_log_dir          = None
 
-    logger = DiasysLogger(file_log_lvl=file_log_lvl,
-                          console_log_lvl=log_lvl,
-                          logfile_folder=conversation_log_dir,
-                          logfile_basename="full_log")
+    logger                  = DiasysLogger(file_log_lvl=file_log_lvl,
+                                            console_log_lvl=log_lvl,
+                                            logfile_folder=conversation_log_dir,
+                                            logfile_basename="full_log")
 
-    # logger = None
+
 
     #
     # 1. Create a JSONLookupDomain object for the "recipes" domain
-    domain = RecipeDomain()
+    domain      = RecipeDomain()
 
-    # 2. For each service, create an object, don't forget to pass the correct domain as an argument
-    #    Refer back to the last section of the tutorial if you have trouble
-
-    # todo
+    # todo?
     # nlu     = RecipeNLU(domain=domain)
     nlu         = HandcraftedNLU(domain=domain, logger=logger)
     nlg         = RecipeNLG(domain=domain, logger=logger)

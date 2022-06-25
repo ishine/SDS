@@ -22,7 +22,7 @@ function info(slot, value, name)
 # -------------------------Only Name Slot-----------------------------------#
 
 template inform_byname(name)
-	"There is a superhero called {name}. What do you want to know about them?"
+	"I found {name}."
 
 	special_case name = "none"
 		"I’m sorry, I could not find this superhero."

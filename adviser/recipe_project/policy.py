@@ -36,7 +36,8 @@ class RecipePolicy(Service):
 
         self.sys_state = { 
             'waiting_for_filter': [],
-            'last_user_act': None
+            'last_user_act': None,
+            'current_suggested_recipe': None
         }
 
     @PublishSubscribe(sub_topics=["user_acts"], pub_topics=["sys_act", "sys_state"])
@@ -68,6 +69,10 @@ class RecipePolicy(Service):
             answer = self._inform_ingredients(ua.value)
             return self._inform(answer)
 
+        if ua.type == UserActionType.Inform and ua.slot == 'name':
+            answer = self._inform_ingredients(ua.value)
+            return self._inform(answer)
+
 
         # if not topics:
         #     return { 'sys_acts': [SysAct(SysActionType.Bad)] }
@@ -90,9 +95,13 @@ class RecipePolicy(Service):
 
         if len(found) > 1:
             self.sys_state['waiting_for_filter'] = found
-            return { 'answer': 'I found multiple recipes:\n' + '\n'.join(r['name'] for r in found) }
+            self.sys_state['current_suggested_recipe'] = None
+            return { 'name': ',\n'.join(r['name'] for r in found) }
 
+        elif len(found) == 1:
+            self.sys_state['waiting_for_filter'] = None
+            self.sys_state['current_suggested_recipe'] = found[0]
+            return { 'name':  found[0]['name']}
 
-        return { 'answer': str(found) }
 
 

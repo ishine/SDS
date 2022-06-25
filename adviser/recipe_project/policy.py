@@ -66,12 +66,15 @@ class RecipePolicy(Service):
             return { 'sys_act': SysAct(SysActionType.Bye), 'sys_state': self.sys_state }
 
         if ua.type == UserActionType.Inform and ua.slot == 'ingredients':
-            answer = self._inform_ingredients(ua.value)
+            answer, cnt = self._inform_ingredients(ua.value)
             return self._inform(answer)
 
         if ua.type == UserActionType.Inform and ua.slot == 'name':
-            answer = self._inform_ingredients(ua.value)
-            return self._inform(answer)
+            answer, cnt = self._inform_ingredients(ua.value)
+            if cnt == 1:
+                return self._inform(answer)
+            else:
+                return self._select(answer)
 
 
         # if not topics:
@@ -86,8 +89,18 @@ class RecipePolicy(Service):
             # [str(sys_act) for sys_act in sys_acts]))
         # return {'sys_acts': sys_acts}
 
-    def _inform(self, answer: str) -> dict:
+    def _inform(self, answer: dict) -> dict:
+
+        if not isinstance(answer, dict):
+            raise Exception(f"answer should be a dictionary, but is {str(type(answer))}")
+
         return { 'sys_act': SysAct(SysActionType.InformByName, slot_values=answer), 'sys_state': self.sys_state }
+
+    def _select(self, answer: dict) -> dict:
+        if not isinstance(answer, dict):
+            raise Exception(f"answer should be a dictionary, but is {str(type(answer))}")
+
+        return { 'sys_act': SysAct(SysActionType.Select, slot_values=answer), 'sys_state': self.sys_state }
 
     def _inform_ingredients(self, value: str) -> dict:
 
@@ -96,12 +109,12 @@ class RecipePolicy(Service):
         if len(found) > 1:
             self.sys_state['waiting_for_filter'] = found
             self.sys_state['current_suggested_recipe'] = None
-            return { 'name': ',\n'.join(r['name'] for r in found) }
+            return ({ 'name': ',\n'.join(r['name'] for r in found)}, len(found))
 
         elif len(found) == 1:
             self.sys_state['waiting_for_filter'] = None
             self.sys_state['current_suggested_recipe'] = found[0]
-            return { 'name':  found[0]['name']}
+            return ({ 'name':  found[0]['name']}, 1)
 
 
 

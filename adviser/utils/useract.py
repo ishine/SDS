@@ -26,6 +26,8 @@ class UserActionType(Enum):
     """The type for a user action as used in :class:`UserAct`."""
 
     Inform = 'inform'
+    InformAdd = 'inform_add'
+    
     NegativeInform = 'negativeinform'
     Request = 'request'
     Hello = 'hello'

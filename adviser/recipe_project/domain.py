@@ -46,6 +46,31 @@ class RecipeDomain(JSONLookupDomain):
     def __init__(self):
         JSONLookupDomain.__init__(self, 'recipes', 'resources/ontologies/recipes.json', 'resources/databases/recipes.db', 'Recipes')
         self.last_results = []
+    
+    # we override find_entities to be able to better match ingredients
+    def find_entities(self, constraints: dict, requested_slots: Iterable = iter(())):
+        """ Returns all entities from the data backend that meet the constraints, with values for
+            the primary key and the system requestable slots (and optional slots, specifyable
+            via requested_slots).
+
+        Args:
+            constraints (dict): Slot-value mapping of constraints.
+                                If empty, all entities in the database will be returned.
+            requested_slots (Iterable): list of slots that should be returned in addition to the
+                                        system requestable slots and the primary key
+
+        """
+        # values for name and all system requestable slots
+        select_clause = ", ".join(set([self.get_primary_key()]) |
+                                  set(self.get_system_requestable_slots()) |
+                                  set(requested_slots))
+        query = "SELECT {} FROM {}".format(select_clause, self.get_domain_name())
+        constraints = {slot: value.replace("'", "''") for slot, value in constraints.items()
+                       if value is not None and str(value).lower() != 'dontcare'}
+        if constraints:
+            query += ' WHERE ' + ' AND '.join("{}='{}' COLLATE NOCASE".format(key, str(val)) if key != 'ingredients' else "lower({}) LIKE '%{}%'".format(key, str(val).lower())
+                                              for key, val in constraints.items())
+        return self.query_db(query)
 
 
     def find_info_about_entity(self, entity_id: str, requested_slots: Iterable):
@@ -63,19 +88,19 @@ class RecipeDomain(JSONLookupDomain):
     def find_recipes_by_ingredients(self, ingredients: List[str]):
 
         iq      = " OR lower(ingredients) LIKE ".join([f"'%{i.lower()}%'" for i in ingredients])
-        query   = f"SELECT * FROM data WHERE ingredients LIKE {iq}"
+        query   = f"SELECT * FROM recipes WHERE ingredients LIKE {iq}"
 
         return self.query_db(query)
 
     def find_recipes_by_name(self, name: str):
 
-        query   = f"SELECT * FROM data WHERE LOWER(name) LIKE '%{name.lower()}%'"
+        query   = f"SELECT * FROM recipes WHERE LOWER(name) LIKE '%{name.lower()}%'"
 
         return self.query_db(query)
 
     def find_recipes_by_ease(self, ease: str):
 
-        query   = f"SELECT * FROM data WHERE LOWER(ease) = '{ease.lower()}'"
+        query   = f"SELECT * FROM recipes WHERE LOWER(ease) = '{ease.lower()}'"
         return self.query_db(query)
 
 

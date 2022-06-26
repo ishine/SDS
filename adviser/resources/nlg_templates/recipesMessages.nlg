@@ -59,18 +59,17 @@ template not_found()
 #------------------------ Found one ----------------------------------#
 
 template found_one(name)
-	"I found a recipe, it is called {name}."
+	"I found exactly one recipe in my database, it is called {name}."
 
 #------------------------ Found some ----------------------------------#
 
-template found_some(names)
-	"I found some recipes, they are {names}."
+template found_some()
+	"I found some recipes, would you like to further narrow down the selection?"
 
 #------------------------ Found too many ----------------------------------#
 
 template found_too_many()
-	"I found too many recipes for that, can you narrow down a bit?"
-	"A lot of recipes match your request, can you narrow down a bit?"
+	"I found many recipes for that, can you narrow down a bit?"
 
 # ----------------------------System Confirm----------------------------------#
 
@@ -88,7 +87,7 @@ template confirm(*slots)
 template reqmore()
 	"Can I help you with anything else?"
 
-template reqmore(primary_uniform_color)
+template reqmore(ingredients)
 	if primary_uniform_color = "dontcare"
 		"Would you like me to look for a superhero wearing any uniform color?"
 template reqmore(main_superpower)

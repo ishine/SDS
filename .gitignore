@@ -206,3 +206,5 @@ adviser/tools/*.zip
 
 # models
 adviser/resources/models
+
+conversation_logs/

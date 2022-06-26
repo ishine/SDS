@@ -76,7 +76,7 @@ class RecipePolicy(Service):
 
 
         if informs and len(informs) > 0:
-            return { 'sys_act': SysAct(SysActionType.RequestMore, slot_values=answer), 'sys_state': self.sys_state }
+            # return { 'sys_act': SysAct(SysActionType.RequestMore, slot_values=answer), 'sys_state': self.sys_state }
 
 
 

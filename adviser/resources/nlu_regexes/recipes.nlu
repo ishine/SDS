@@ -13,27 +13,68 @@ rule bad(): "{IMPOSSIBLEREGEX()}"
 # ----------------------
 
 rule inform(ingredients)
-    "I want to cook something with {ingredients}"
-    "Suggest me some recipe with {ingredients}"
+    "Suggest me some recipe (from cookbook )?(with|having) {ingredients}(s)?"
+    "I want to cook something (with|having) {ingredients}(s)?"
+    "Tell me a recipe (from cookbook )?(with|having) {ingredients}(s)?"
+    "Do you have a recipe with {ingredients}(s)"
+    "Do you have a recipe that includes {ingredients}(s)"
+
 
 rule inform(ease)
-    "Suggest me some recipe that is {ease} to make"
+    "(Suggest|Tell|Give) me some recipe (from cookbook )?that is {ease} (to make)?"
+    "I want to cook something that is {ease} (to make)?"
+    "I want to cook (a|an) {ease} recipe"
+    "I want to cook a recipe (that|which) is (quite )?{ease}"
+    "Do you have a recipe that is {ease} to make"
+    "I want to cook something {ease}"
+
 
 rule inform(cookbook)
     "I want to cook something from {cookbook}"
+    "(Suggest|Tell|Give) me some recipe from {cookbook}?"
+    "I want to cook a recipe from {cookbook}"
+
+rule inform(notes)
+    "(Suggest|Tell|Give) me a recipe that (has|is) {notes}"
+    "I want to make a recipe that is {notes}"
+    "I want to cook a recipe that is {notes}"
+    "I want to cook a recipe that is similar to {notes}"
+    "I want to cook a recipe that follows {notes}"
 
 rule inform(name)
     "I want to cook {name}"
+    "{name}"
+    "Tell me how to cook {name}"
+    "I (shall )?pick {name}"
+
 
 rule inform(prep_time)
-    "I want to cook something in {prep_time} minutes"
+    "I want to cook something (quickly )?in {prep_time} minutes"
+    "(Tell|Suggest|Give) a recipe that can be cooked in {prep_time} minutes"
+    "Do you have recipe to (make|cook )?in {prep_time} minutes"
+
 
 rule inform(type)
     "I want to cook some {type} food"
+    "I want to (cook|make|prepare )?(a )? {type}"
+    "Do you have a recipe for (a )?{type}"
+    "(Suggest|Tell|Give) (me )? a recipe for {type}"
 
 rule inform(rating)
     "I want to cook something rated with {rating} stars"
+    "I want to cook something with {rating} star rating"
+    "(Suggest|Tell|Give) (me )? a recipe (with|having) {rating} star rating"
+    "(Suggest|Tell|Give) (me )? a recipe (with|having) {rating} star(s)?"
+    "(Suggest|Tell) (me )?(a )?{rating} star rating recipe"
+    "Do you have a recipe with {rating} stars"
+    "Do you have a {rating} star rating recipe"
 
+rule inform(ease, prep_time)
+    "I want a recipe that is {ease} and {prep_time} to cook"
+
+rule inform(ease, ingredients)
+    "I want an {ease} recipe with {ingredients}"
+    
 # ----------------------
 # Requestable slots
 # ----------------------
@@ -76,32 +117,12 @@ rule request(make_it_next)
 
 # synonyms
 
-function synonyms(slot, value)
-    "{value}"
-  
-    #add_if slot = "name"
-
-    #add_if slot = "last_known_location"
-
-    #add_if slot = "description"
-
-    #add_if slot = "real_name"
-
-    add_if slot = "main_superpower"
-        if value = "strength"
-            "super strength"
-        if value = "martial arts"
-            "fighting"
-    
-    add_if slot = "loyalty"
-        if value = "he works best alone"
-            "alone"
-            "himself"
 
 
 function slot_synonyms(slot)
     "{IMPOSSIBLEREGEX()}"
-
+    if slot = "ingredients"
+        {slot}(
     if slot = "name"
         "name"
         "{domain_vocab()}('s)? name"

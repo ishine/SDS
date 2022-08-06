@@ -23,6 +23,7 @@ from services.service import PublishSubscribe
 from services.service import Service
 from utils.beliefstate import BeliefState
 from utils.useract import UserActionType, UserAct
+from .models.recipe_req import RecipeReq
 
 
 class RecipeBST(Service):
@@ -59,6 +60,7 @@ class RecipeBST(Service):
         # last_ua                         = self.sys_state['last_user_act']
         # self.sys_state['last_user_act'] = ua
 
+        self.logger.error(f"[bst] user_acts = {user_acts}")
         if user_acts:
             self._reset_informs(user_acts)
             self._reset_requests()
@@ -66,10 +68,12 @@ class RecipeBST(Service):
 
             self._handle_user_acts(user_acts)
 
-            num_entries, discriminable = self.bs.get_num_dbmatches()
-            self.bs["num_matches"] = num_entries
-            self.bs["discriminable"] = discriminable
+            self.bs["num_matches"] = self.matching()
+            # self.bs["discriminable"] = discriminable
+        elif not self.bs['start']:
+            self.bs["user_acts"] = [UserActionType.Bad]
 
+        self.bs['start'] = False
         return {'beliefstate': self.bs}
 
     def dialog_start(self):
@@ -82,6 +86,13 @@ class RecipeBST(Service):
         """
         # initialize belief state
         self.bs = BeliefState(self.domain)
+        self.bs['start'] = True
+
+    def matching(self):
+        informs = self.bs['informs']
+        req     = RecipeReq.from_informs(informs)
+        found   = self.domain.find_recipes(req)
+        return len(found)
 
 
 
@@ -94,6 +105,8 @@ class RecipeBST(Service):
         slots = {act.slot for act in acts if act.type == UserActionType.Inform}
         for slot in [s for s in self.bs['informs']]:
             # special case: ingredients should not be replaced
+            if slot == "ingredients":
+                continue
             if slot in slots:
                 del self.bs['informs'][slot]
 
@@ -132,12 +145,6 @@ class RecipeBST(Service):
         if self.domain.get_primary_key() in self.bs['informs'] \
                 and UserActionType.Inform in self.bs["user_acts"]:
             del self.bs['informs'][self.domain.get_primary_key()]
-
-        # We choose to interpret switching as wanting to start a new dialog and do not support
-        # resuming an old dialog
-        elif UserActionType.SelectDomain in self.bs["user_acts"]:
-            self.bs["informs"] = {}
-            self.bs["requests"] = {}
 
         # Handle user acts
         for act in user_acts:

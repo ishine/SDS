@@ -83,7 +83,11 @@ class RecipeDomain(JSONLookupDomain):
         if request.rating is not None:
             q += f" AND rating = {request.rating} "
 
-        q = "SELECT * FROM {}".format(self.get_domain_name())
+        if len(q) > 0:
+            q = q[4:]
+            q = "SELECT * FROM {} where {}".format(self.get_domain_name(), q)
+        else:
+            q = "SELECT * FROM {}".format(self.get_domain_name())
         return [Recipe.from_db(r) for r in self.query_db(q)]
         
 

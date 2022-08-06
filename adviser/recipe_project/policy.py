@@ -20,6 +20,7 @@
 from typing import List, Dict
 
 from .domain import RecipeDomain
+from .models.recipe_req import RecipeReq
 from services.service import PublishSubscribe, Service
 from utils import SysAct, SysActionType
 from utils.logger import DiasysLogger
@@ -80,9 +81,10 @@ class RecipePolicy(Service):
         if informs and len(informs) > 0:
             # return { 'sys_act': SysAct(SysActionType.RequestMore, slot_values=answer), 'sys_state': self.sys_state }
 
-
-
-
+            req = RecipeReq.from_informs(informs)
+            self.debug_logger.error(f"[policy.domain] req: {req}")
+            # found = self.domain.find_entities(informs)
+            # self.debug_logger.error(f"[policy.domain] found: {found}")
             for slot, value in informs.items():
                 if slot == 'ingredients':
                     a, cnt = self._inform_ingredients(list(value.keys())[0])
@@ -118,7 +120,6 @@ class RecipePolicy(Service):
 
         if not isinstance(answer, dict):
             raise Exception(f"answer should be a dictionary, but is {str(type(answer))}")
-        self.debug_logger.error(f"found_some() slot_values={answer}")
         return { 'sys_act': SysAct(SysActionType.FoundSome, slot_values=answer), 'sys_state': self.sys_state }
 
     def _found_one(self, answer: dict) -> dict:

@@ -20,6 +20,7 @@
 from typing import List, Iterable
 from utils.domain.jsonlookupdomain import JSONLookupDomain
 from examples.webapi.mensa.parser import MensaParser, DishType
+from .models.recipe_req import RecipeReq
 
 SLOT_VALUES = {
     'day': ['today', 'tomorrow', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
@@ -71,6 +72,16 @@ class RecipeDomain(JSONLookupDomain):
             query += ' WHERE ' + ' AND '.join("{}='{}' COLLATE NOCASE".format(key, str(val)) if key != 'ingredients' else "lower({}) LIKE '%{}%'".format(key, str(val).lower())
                                               for key, val in constraints.items())
         return self.query_db(query)
+
+    def find_recipes(self, request: RecipeReq):
+
+        if len(request.query) > 0:
+            pass
+
+
+
+
+
 
 
     def find_info_about_entity(self, entity_id: str, requested_slots: Iterable):

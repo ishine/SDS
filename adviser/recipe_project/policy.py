@@ -21,6 +21,7 @@ from typing import List, Dict
 
 from .domain import RecipeDomain
 from .models.recipe_req import RecipeReq
+from .models.recipe import Recipe
 from services.service import PublishSubscribe, Service
 from utils import SysAct, SysActionType
 from utils.logger import DiasysLogger
@@ -56,9 +57,7 @@ class RecipePolicy(Service):
         requests        = bs['requests']
         # how many matching recipes found atm in db
         num_matches     = bs['num_matches']
-        
 
-        self.debug_logger.error(f"policy: bs={bs}")
         self.debug_logger.error(f"num_matches={num_matches}, informs={len(informs)}")
         # current user act types
         user_acts       = bs['user_acts']
@@ -77,57 +76,37 @@ class RecipePolicy(Service):
         if ua == UserActionType.Bye:
             return { 'sys_act': SysAct(SysActionType.Bye), 'sys_state': self.sys_state }
 
-
         if informs and len(informs) > 0:
             # return { 'sys_act': SysAct(SysActionType.RequestMore, slot_values=answer), 'sys_state': self.sys_state }
 
-            req = RecipeReq.from_informs(informs)
-            self.debug_logger.error(f"[policy.domain] req: {req}")
-            # found = self.domain.find_entities(informs)
-            # self.debug_logger.error(f"[policy.domain] found: {found}")
-            for slot, value in informs.items():
-                if slot == 'ingredients':
-                    a, cnt = self._inform_ingredients(list(value.keys())[0])
-                    return self._recipe_answer(a, cnt)
-                if slot == 'name':
-                    a, cnt = self._fetch_by_name(list(value.keys())[0])
-                    return self._recipe_answer(a, cnt)
-                if slot == 'ease':
-                    a, cnt = self._fetch_by_ease(list(value.keys())[0])
-                    return self._recipe_answer(a, cnt)
+            req     = RecipeReq.from_informs(informs)
+            found   = self.domain.find_recipes(req)
+            cnt     = len(found)
+
+            if cnt == 0:
+                return self._not_found()
+            if cnt == 1:
+                return self._found_one(found[0])
+            if cnt < 5:
+                return self._found_some(found)
+
+            return self._found_too_many()
         
 
         return { 'sys_act': SysAct(SysActionType.Bad), 'sys_state': self.sys_state }
 
 
-    
-    def _recipe_answer(self, answer: dict, cnt: int) -> dict:
-        if cnt == 0:
-            return self._not_found()
-        if cnt == 1:
-            return self._found_one(answer)
-        if cnt < 5:
-            return self._found_some(answer)
-
-        return self._found_too_many()
-
 
     def _not_found(self) -> dict:
         return { 'sys_act': SysAct(SysActionType.NotFound), 'sys_state': self.sys_state }
 
+    def _found_some(self, recipes: List[Recipe]) -> dict:
 
-    def _found_some(self, answer: dict) -> dict:
+        return { 'sys_act': SysAct(SysActionType.FoundSome, slot_values={'names': [r['name'] for r in recipes]}), 'sys_state': self.sys_state }
 
-        if not isinstance(answer, dict):
-            raise Exception(f"answer should be a dictionary, but is {str(type(answer))}")
-        return { 'sys_act': SysAct(SysActionType.FoundSome, slot_values=answer), 'sys_state': self.sys_state }
+    def _found_one(self, recipe: Recipe) -> dict:
 
-    def _found_one(self, answer: dict) -> dict:
-
-        if not isinstance(answer, dict):
-            raise Exception(f"answer should be a dictionary, but is {str(type(answer))}")
-        
-        return { 'sys_act': SysAct(SysActionType.FoundOne, slot_values=answer), 'sys_state': self.sys_state }
+        return { 'sys_act': SysAct(SysActionType.FoundOne, slot_values={'name': recipe.name}), 'sys_state': self.sys_state }
 
     def _found_too_many(self) -> dict:
 
@@ -139,7 +118,7 @@ class RecipePolicy(Service):
         flen    = len(found)
 
         if flen > 1:
-            self.sys_state['waiting_for_filter'] = foun    
+            self.sys_state['waiting_for_filter'] = found[0]   
             self.sys_state['current_suggested_recipe'] = None
             return ({ 'name': ',\n'.join(r['name'] for r in found)}, flen)
 

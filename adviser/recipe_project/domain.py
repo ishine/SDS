@@ -21,6 +21,7 @@ from typing import List, Iterable
 from utils.domain.jsonlookupdomain import JSONLookupDomain
 from examples.webapi.mensa.parser import MensaParser, DishType
 from .models.recipe_req import RecipeReq
+from .models.recipe import Recipe
 
 SLOT_VALUES = {
     'day': ['today', 'tomorrow', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
@@ -31,11 +32,6 @@ SLOT_VALUES = {
     'fish': ['true', 'false'],
     'pork': ['true', 'false'],
 }
-
-def get_root_dir():
-    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
 
 class RecipeDomain(JSONLookupDomain):
     """Domain for the Mensa API
@@ -73,7 +69,7 @@ class RecipeDomain(JSONLookupDomain):
                                               for key, val in constraints.items())
         return self.query_db(query)
 
-    def find_recipes(self, request: RecipeReq):
+    def find_recipes(self, request: RecipeReq) -> List[Recipe]:
 
         q = ""
         if len(request.ingredients) > 0:
@@ -88,7 +84,7 @@ class RecipeDomain(JSONLookupDomain):
             q += f" AND rating = {request.rating} "
 
         q = "SELECT * FROM {}".format(self.get_domain_name())
-        return self.query_db(q)
+        return [Recipe.from_db(r) for r in self.query_db(q)]
         
 
     def _expand_ease(self, ease: str):

@@ -67,7 +67,8 @@ class RecipeNLG(Service):
         if sys_act is None or sys_act.type == SysActionType.Welcome:
             return random.choice([
                 'Hi! This is your friendly recipe bot, how can I help you?',
-                'Hello, I am the recipe bot. Let me know if I can help you in any way.'
+                'Hello, I am the recipe bot. Let me know if I can help you in any way.',
+                'Hi, this is the recipe bot. How can I help you?',
             ])
 
         if sys_act.type == SysActionType.Bad:
@@ -76,8 +77,7 @@ class RecipeNLG(Service):
                 'I\'m afraid I don\'t understand.'
             ])
         elif sys_act.type == SysActionType.Bye:
-            return  
-            random.choice(['Thank you, good bye.',
+            return  random.choice(['Thank you, good bye.',
             'I hope I could be of any help, see you.',
             'Always glad to help. Bye!'
             ]) 
@@ -94,8 +94,8 @@ class RecipeNLG(Service):
 
         # inform if no applicable rule could be found in the template file
         if not rule_found:
-            self.logger.info('Could not find a fitting rule for the given system act!')
-            self.logger.info("System Action: " + str(sys_act.type)
+            self.logger.error('Could not find a fitting rule for the given system act!')
+            self.logger.error("System Action: " + str(sys_act.type)
                              + " - Slots: " + str(sys_act.slot_values))
 
         # self.logger.dialog_turn("System Action: " + message)

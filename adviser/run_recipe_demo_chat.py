@@ -57,13 +57,11 @@ if __name__ == "__main__":
     # 1. Create a JSONLookupDomain object for the "recipes" domain
     domain      = RecipeDomain()
 
-    # todo?
     # nlu     = RecipeNLU(domain=domain)
     nlu         = HandcraftedNLU(domain=domain, logger=logger)
     nlg         = RecipeNLG(domain=domain, logger=logger)
 
-    # ?
-    bst         = RecipeBST(domain=domain)
+    bst         = RecipeBST(domain=domain, logger=logger)
     policy      = RecipePolicy(domain=domain, logger=logger)
 
     user_in     = ConsoleInput(domain="")

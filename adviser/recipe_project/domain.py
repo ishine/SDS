@@ -75,12 +75,29 @@ class RecipeDomain(JSONLookupDomain):
 
     def find_recipes(self, request: RecipeReq):
 
-        if len(request.query) > 0:
-            pass
+        q = ""
+        if len(request.ingredients) > 0:
+            q += "".join(f" AND LOWER(ingredients) LIKE '%{i.lower()}%' " for i in request.ingredients)
+        if request.ease is not None:
+            q += f" AND lower(ease) in {self._expand_ease(request.ease)} "
+        if request.cookbook is not None:
+            q += f" AND lower(cookbook) = {request.cookbook} "
+        if request.name is not None:
+            q += f" AND lower(name) = {request.name} "
+        if request.rating is not None:
+            q += f" AND rating = {request.rating} "
 
+        q = "SELECT * FROM {}".format(self.get_domain_name())
+        return self.query_db(q)
+        
 
+    def _expand_ease(self, ease: str):
 
-
+        if ease.casefold() in ["easy", "simple"]:
+            return "('super simple', 'fairly easy')"
+        if ease.casefold() in ["not too hard", "not too difficult"]:
+            return "('super simple', 'fairly easy', 'average')"
+        return f"('{ease}')"
 
 
 
@@ -95,24 +112,6 @@ class RecipeDomain(JSONLookupDomain):
         result = {slot: self.last_results[int(entity_id)-1][slot] for slot in requested_slots}
         result['artificial_id'] = entity_id
         return [result]
-
-    def find_recipes_by_ingredients(self, ingredients: List[str]):
-
-        iq      = " OR lower(ingredients) LIKE ".join([f"'%{i.lower()}%'" for i in ingredients])
-        query   = f"SELECT * FROM recipes WHERE ingredients LIKE {iq}"
-
-        return self.query_db(query)
-
-    def find_recipes_by_name(self, name: str):
-
-        query   = f"SELECT * FROM recipes WHERE LOWER(name) LIKE '%{name.lower()}%'"
-
-        return self.query_db(query)
-
-    def find_recipes_by_ease(self, ease: str):
-
-        query   = f"SELECT * FROM recipes WHERE LOWER(ease) = '{ease.lower()}'"
-        return self.query_db(query)
 
 
     def get_requestable_slots(self) -> List[str]:

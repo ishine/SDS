@@ -39,7 +39,6 @@ class UserActionType(Enum):
     Ack = 'ack'
     Bad = 'bad'
     Confirm = 'confirm'
-    SelectDomain = 'selectdomain'
 
 
 class UserAct(object):

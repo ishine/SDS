@@ -55,7 +55,9 @@ class RecipePolicy(Service):
         requests        = bs['requests']
         # how many matching recipes found atm in db
         num_matches     = bs['num_matches']
+        
 
+        self.debug_logger.error(f"policy: bs={bs}")
         self.debug_logger.error(f"num_matches={num_matches}, informs={len(informs)}")
         # current user act types
         user_acts       = bs['user_acts']
@@ -116,7 +118,7 @@ class RecipePolicy(Service):
 
         if not isinstance(answer, dict):
             raise Exception(f"answer should be a dictionary, but is {str(type(answer))}")
-        
+        self.debug_logger.error(f"found_some() slot_values={answer}")
         return { 'sys_act': SysAct(SysActionType.FoundSome, slot_values=answer), 'sys_state': self.sys_state }
 
     def _found_one(self, answer: dict) -> dict:

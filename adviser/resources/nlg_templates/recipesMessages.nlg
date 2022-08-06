@@ -63,8 +63,11 @@ template found_one(name)
 
 #------------------------ Found some ----------------------------------#
 
+template found_some(names)
+	"I found {names}. Which one do you want?"
 template found_some()
 	"I found some recipes, would you like to further narrow down the selection?"
+
 
 #------------------------ Found too many ----------------------------------#
 

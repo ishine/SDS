@@ -11,6 +11,10 @@
     - [] do you have a recipe that is easy to make
     - [] give me a hard recipe
 
+- asking for a recipe that is quick to make
+    - [] give me some recipe that is fast/quick to make
+    - [] i want to cook something fast
+
 - favorites
     - [] list my favorite recipes
     - [] can you store this recipe as a favorite
@@ -22,6 +26,22 @@
     - [] what is the fastest recipe of those
     - [] which of these recipes is vegetarian?
     - [] just give me one of these
-    
+    - [] <name>
+    - [] i pick/choose/want <name>
+
+- if the bot already narrowed the selection down to one recipe:
+    - [] what cookbook is this recipe from?
+    - [] when did i last make this recipe
+    - [] how long does this recipe take
+    - [] what is the rating of this recipe
+    - [] please list the ingredients for this recipe
+    - [] how easy is this recipe to make
+    - [] are there any notes on this recipe?
+    - [] what page of the cookbook is this recipe from?
+
 
 ## nice-to-have
+
+- multiple informs in one user utterance (is that possible?)
+    - i want a recipe that is {easy} and {fast} to cook
+    - i want an {easy} recipe with {potatoes}

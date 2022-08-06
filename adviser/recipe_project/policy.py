@@ -66,6 +66,7 @@ class RecipePolicy(Service):
             return { 'sys_act': SysAct(SysActionType.Welcome), 'sys_state': self.sys_state}
 
         ua              = list(user_acts)[0]
+        self.debug_logger.error(f"UAs={user_acts}")
 
         if ua == UserActionType.Hello:
             return { 'sys_act': SysAct(SysActionType.Welcome), 'sys_state': self.sys_state }
@@ -76,8 +77,11 @@ class RecipePolicy(Service):
         if ua == UserActionType.Bye:
             return { 'sys_act': SysAct(SysActionType.Bye), 'sys_state': self.sys_state }
 
+        if ua == UserActionType.Bad:
+            return { 'sys_act': SysAct(SysActionType.Bad), 'sys_state': self.sys_state }
+        
+
         if informs and len(informs) > 0:
-            # return { 'sys_act': SysAct(SysActionType.RequestMore, slot_values=answer), 'sys_state': self.sys_state }
 
             req     = RecipeReq.from_informs(informs)
             found   = self.domain.find_recipes(req)
@@ -102,7 +106,7 @@ class RecipePolicy(Service):
 
     def _found_some(self, recipes: List[Recipe]) -> dict:
 
-        return { 'sys_act': SysAct(SysActionType.FoundSome, slot_values={'names': [r['name'] for r in recipes]}), 'sys_state': self.sys_state }
+        return { 'sys_act': SysAct(SysActionType.FoundSome, slot_values={'names': ", ".join([r.name for r in recipes])}), 'sys_state': self.sys_state }
 
     def _found_one(self, recipe: Recipe) -> dict:
 

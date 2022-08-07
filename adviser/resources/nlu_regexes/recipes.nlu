@@ -12,6 +12,8 @@ rule inform(ingredients)
     "For (which|what) {recipe_syn()} can I use {ingredients}s?"
     "(what|which) {recipe_syn()} can I use {ingredients}s? for"
 
+    "it should also contain {ingredients}s?"
+
 
 rule inform(ease)
     "(Suggest|Tell|Give) me some recipe (from cookbook )?that is {ease} (to make)?"
@@ -68,13 +70,7 @@ rule inform(ease, prep_time)
 rule inform(ease, ingredients)
     "I want an {ease} recipe with {ingredients}"
     
-    
-# ----------------------
-# Inform add slots
-# ----------------------
 
-rule inform_add(ingredients)
-    "it should also contain {ingredients}"
 
 
 # ----------------------
@@ -97,12 +93,16 @@ rule request(page)
 
 rule request(ingredients)
     "what are the ingredients of this recipe"
+    "(can you )?list( me)? the ingredients"
+    "what do i need for (this|that|the) {recipe_syn()}"
 
 rule request(last_made)
     "when did I last make this recipe"
 
 rule request(ease)
-    "how easy is this recipe"
+    "how (easy|hard|simple|difficult) is (this|that)"
+    "how (easy|hard|simple|difficult) is (this {recipe_syn()}|it)( to {cook_syn()})?"
+    "is (this {recipe_syn()}|it) (easy|hard|simple|difficult) to {cook_syn()}"
 
 rule request(rating)
     "what is the rating of this recipe"
@@ -122,6 +122,12 @@ rule request(make_it_next)
 
 # synonyms
 
+function cook_syn()
+    "prepare"
+    "cook"
+    "make"
+    "follow"
+    "do"
 
 function recipe_syn()
     "(some |a )?recipes?"

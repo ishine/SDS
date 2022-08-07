@@ -66,9 +66,10 @@ class RecipeBST(Service):
             self._reset_requests()
             self.bs["user_acts"] = self._get_all_usr_action_types(user_acts)
 
+            self.bs["num_matches"] = self.cnt_matching()
             self._handle_user_acts(user_acts)
+            self.bs["num_matches"] = self.cnt_matching()
 
-            self.bs["num_matches"] = self.matching()
             # self.bs["discriminable"] = discriminable
         elif not self.bs['start']:
             self.bs["user_acts"] = [UserActionType.Bad]
@@ -88,12 +89,17 @@ class RecipeBST(Service):
         self.bs = BeliefState(self.domain)
         self.bs['start'] = True
 
-    def matching(self):
+    def cnt_matching(self):
         informs = self.bs['informs']
         req     = RecipeReq.from_informs(informs)
         found   = self.domain.find_recipes(req)
         return len(found)
 
+    def matching(self):
+        informs = self.bs['informs']
+        req     = RecipeReq.from_informs(informs)
+        found   = self.domain.find_recipes(req)
+        return found
 
 
     def _reset_informs(self, acts: List[UserAct]):
@@ -146,6 +152,7 @@ class RecipeBST(Service):
                 and UserActionType.Inform in self.bs["user_acts"]:
             del self.bs['informs'][self.domain.get_primary_key()]
 
+        num_matches = self.bs['num_matches']
         # Handle user acts
         for act in user_acts:
             if act.type == UserActionType.Request:
@@ -156,6 +163,13 @@ class RecipeBST(Service):
                     self.bs['informs'][act.slot][act.value] = act.score
                 else:
                     self.bs['informs'][act.slot] = {act.value: act.score}
+
+            elif act.type == UserActionType.PickFirst and num_matches > 0 and num_matches < 5:
+                self.bs['chosen'] = self.matching()[0]
+            elif act.type == UserActionType.PickSecond and num_matches > 0 and num_matches < 5:
+                self.bs['chosen'] = self.matching()[1]
+            elif act.type == UserActionType.PickLast and num_matches > 0 and num_matches < 5:
+                self.bs['chosen'] = self.matching()[:-1]
 
             elif act.type == UserActionType.NegativeInform:
                 # reset mentioned value to zero probability

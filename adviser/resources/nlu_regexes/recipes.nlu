@@ -1,23 +1,16 @@
-rule hello(): "(\\b|^|\\ )(hi|hello|howdy|hey)\\b"
-rule bye(): "(\\b|^|\\ )(bye(-)?(bye)?|good(-)?bye|that'?s?\\ (is\\ )*all)(\\s|$|\\ |\\.)"
-rule deny(): "((\\b|^|\\ )(n(o)?|wrong|incorrect|error|nope)|(not\\ (true|correct|right)))(\\s)?$"
-rule affirm(): "((yes|yeah|(\\b|^)ok\\b|(\\b|^)OK|okay|sure|^y$|(\\b|^)yep(\\b|$)|(that('?s| is) )?(?<!not\\ )(?<!no\\ )(right|correct|confirm)))(\\s)?$"
-rule thanks(): "(?=.*(^(\\ )*)(((great|good|awesome|nice|cool)\\ )?((that((')?s|\\ (is|was))\\ (very\\ )?helpful)\\ )?(thank|thank(s|\\ you)(\\ (very|so)\\ much)?)(\\ (that((')?s|\\ (is|was))\\ (very\\ )?helpful))?|((great|good|awesome|nice|cool)\\ )?(that((')?s|\\ (is|was))\\ (very\\ )?helpful)|(great|good|awesome|nice|cool))((\\ )*))(?=^(?:(?!bye).)*$).*$"
-rule repeat(): "(\\b|^|\\ )(repeat((\\ that )|(\\ it))?)|(say((\\ that )|(\\ it))\\ again)|(again)"
-rule reqalts(): "(\\b|^|\\ )((something|anything)\\ else)|(different(\\ one)*)|(another\\ one)|(alternatives*)|(other options*)|((don'*t|do not) (want|like)\\ (that|this)(\\ one)*)"
-rule ack(): "{IMPOSSIBLEREGEX()}"
-rule bad(): "{IMPOSSIBLEREGEX()}"
 
 # ----------------------
 # user informable slots 
 # ----------------------
 
 rule inform(ingredients)
-    "Suggest me some recipe (from cookbook )?(with|having) {ingredients}(s)?"
-    "I want to cook something (with|having) {ingredients}(s)?"
-    "Tell me a recipe (from cookbook )?(with|having) {ingredients}(s)?"
-    "Do you have a recipe with {ingredients}(s)"
-    "Do you have a recipe that includes {ingredients}(s)"
+    "I (want|plan|need) to (cook|prepare|do) {recipe_syn()} (with|having|that includes|using|that uses) {ingredients}s?"
+    "(Can you )?(Tell|suggest|give|pick|choose)( me)? {recipe_syn()} (from cookbook )?(with|having) {ingredients}s?"
+    "Do you have (a recipe|something|a meal) with {ingredients}s?"
+    "Do you have (a recipe|something|a meal) that (includes|uses) {ingredients}s?"
+    "Whats a {recipe_syn()} with {ingredients}s?"
+    "For (which|what) {recipe_syn()} can I use {ingredients}s?"
+    "(what|which) {recipe_syn()} can I use {ingredients}s? for"
 
 
 rule inform(ease)
@@ -75,12 +68,23 @@ rule inform(ease, prep_time)
 rule inform(ease, ingredients)
     "I want an {ease} recipe with {ingredients}"
     
+    
+# ----------------------
+# Inform add slots
+# ----------------------
+
+rule inform_add(ingredients)
+    "it should also contain {ingredients}"
+
+
 # ----------------------
 # Requestable slots
 # ----------------------
 
 rule request(name)
-    "what do you want to cook"
+    "what is the name of that {recipe_syn()}"
+    "what's the name( again)? of that {recipe_syn()}"
+    "can you tell me the name again"
 
 rule request(prep_time)
     "what is the preparation time of this recipe" 
@@ -115,36 +119,12 @@ rule request(make_it_next)
 
 
 
+
 # synonyms
 
 
-
-function slot_synonyms(slot)
-    "{IMPOSSIBLEREGEX()}"
-    if slot = "ingredients"
-        {slot}(
-    if slot = "name"
-        "name"
-        "{domain_vocab()}('s)? name"
-        "name of the {domain_vocab()}"
-    if slot = "primary_uniform_color"
-        "colo(u)?r(s)?"
-        "(primary|main) colo(u)?r(s)?"
-    if slot = "main_superpower"
-        "(main|primary)? skill(s)?"
-        "(main|primary)? power(s)?"
-        "(main|primary)? talent(s)?"
-    if slot = "last_known_location"
-        "location"
-        "address"
-        "last (known)? location"
-        "last (known)? address"
-    if slot = "loyalty"
-        "loyalty"
-        "team"
-    if slot = "description"
-        "description"
-    if slot = "real_name"
-        "secret identity"
-        "real name"
-        "alias(es)?"
+function recipe_syn()
+    "(some |a )?recipes?"
+    "(some |a )?meals?"
+    "(some |a )?foods?"
+    "something"

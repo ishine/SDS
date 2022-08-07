@@ -26,8 +26,8 @@
     - [] what is the fastest recipe of those
     - [] which of these recipes is vegetarian?
     - [] just give me one of these
-    - [] <name>
-    - [] i pick/choose/want <name>
+    - [] "name"
+    - [] i pick/choose/want "name"
 
 - if the bot already narrowed the selection down to one recipe:
     - [] what cookbook is this recipe from?
@@ -45,3 +45,12 @@
 - multiple informs in one user utterance (is that possible?)
     - i want a recipe that is {easy} and {fast} to cook
     - i want an {easy} recipe with {potatoes}
+
+
+### example dialogues
+
+1. i want to cook something with apples
+2. I found Potato apple roast, mango chutney, lentil sweet potato curry, prosciutto apple flatbread pizza. Which one do you want?
+3. I choose the first one.
+4. Okay, Potato apple roast then. Do you need more information on that recipe?
+	

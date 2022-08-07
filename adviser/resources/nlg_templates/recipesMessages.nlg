@@ -13,12 +13,6 @@ template request(prep_time): "How long should the preparation take?"
 
 # Rules for System Inform
 
-function info(slot, value, name)
-	if slot = "loyality": "works with the following organisation: \"{value}\""
-	if slot = "description": "has the following description: \"{value}\""
-	if slot = "main_superpower": "uses \"{value}\""
-	if slot = "primary_uniform_color": "wears a uniform with \"{value}\" as main color"
-
 # -------------------------Only Name Slot-----------------------------------#
 
 template inform_byname(name)
@@ -49,6 +43,10 @@ template inform_alternatives(name, *slots)
 	special_case name = "none"
 		"There is no other course which also {for_entry(slots, "info", ", ", " and ", name)}."
 
+#------------------------ Select -------------------------------------#
+
+template select()
+	"Okay, do you want to know something about this recipe?"
 
 #------------------------ Not found ----------------------------------#
 
@@ -85,20 +83,19 @@ template confirm(*slots)
 	"Let me confirm, you are looking for a superhero who {for_entry(slots, "info", ", ", " and ", "none")}, right?"
 
 
+# -------------------------- Not yet chosen ---------------------------------#
+
+template not_yet_chosen()
+	"Sorry, you have not yet decided on a recipe."
+
+
+
 # ---------------------------System RequestMore------------------------------#
 
 template reqmore()
 	"Can I help you with anything else?"
 
-template reqmore(ingredients)
-	if primary_uniform_color = "dontcare"
-		"Would you like me to look for a superhero wearing any uniform color?"
-template reqmore(main_superpower)
-	if main_superpower = "dontcare"
-		"Would you like me to look for a superhero using any kind of superpower?"
-template reqmore(loyality)
-	if loyality = "dontcare"
-		"Would you like me to look for a superhero associated with any organisation?"
+
 
 # ---------------------------System Select----------------------------------#
 

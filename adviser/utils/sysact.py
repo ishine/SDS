@@ -36,6 +36,7 @@ class SysActionType(Enum):
     Bad = 'bad'
     Bye = 'closingmsg'
     ConfirmRequest = 'confreq'
+    Inform = 'inform'
     FoundSome = 'found_some'
     FoundOne = 'found_one'
     FoundTooMany = 'found_too_many'

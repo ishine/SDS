@@ -79,7 +79,25 @@ class RecipePolicy(Service):
 
         if ua == UserActionType.Bad:
             return { 'sys_act': SysAct(SysActionType.Bad), 'sys_state': self.sys_state }
+
+        # user was presented some selection (2-4) and now picks one
+        if ua == UserActionType.PickFirst and num_matches > 0 and num_matches < 5:
+            return { 'sys_act': SysAct(SysActionType.Select), 'sys_state': self.sys_state }
+        if ua == UserActionType.PickSecond and num_matches > 0 and num_matches < 5:
+            return { 'sys_act': SysAct(SysActionType.Select), 'sys_state': self.sys_state }
+        if ua == UserActionType.PickLast and num_matches > 0 and num_matches < 5:
+            return { 'sys_act': SysAct(SysActionType.Select), 'sys_state': self.sys_state }
         
+        if ua == UserActionType.Request:
+
+            if not self._has_chosen(bs):
+                return { 'sys_act': SysAct(SysActionType.NotYetChosen), 'sys_state': self.sys_state }
+
+            slots = bs['requests'].items()
+            for slot, v in slots:
+                self.debug_logger.error(f"{slot} {v}")
+            return { 'sys_act': SysAct(SysActionType.Bad), 'sys_state': self.sys_state }
+
 
         if informs and len(informs) > 0:
 
@@ -100,12 +118,17 @@ class RecipePolicy(Service):
         return { 'sys_act': SysAct(SysActionType.Bad), 'sys_state': self.sys_state }
 
 
+    def _has_chosen(self, bs: BeliefState) -> bool:
+        return 'chosen' in bs and bs['chosen'] is not None
+
 
     def _not_found(self) -> dict:
         return { 'sys_act': SysAct(SysActionType.NotFound), 'sys_state': self.sys_state }
 
     def _found_some(self, recipes: List[Recipe]) -> dict:
-
+        
+        if len(recipes) == 2:
+            return { 'sys_act': SysAct(SysActionType.FoundSome, slot_values={'names': "{recipes[0].name} or {recipes[1].name}"}), 'sys_state': self.sys_state }
         return { 'sys_act': SysAct(SysActionType.FoundSome, slot_values={'names': ", ".join([r.name for r in recipes])}), 'sys_state': self.sys_state }
 
     def _found_one(self, recipe: Recipe) -> dict:

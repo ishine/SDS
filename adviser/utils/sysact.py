@@ -40,6 +40,7 @@ class SysActionType(Enum):
     FoundOne = 'found_one'
     FoundTooMany = 'found_too_many'
     NotFound = 'not_found'
+    NotYetChosen = 'not_yet_chosen'
 
 
 

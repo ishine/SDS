@@ -29,6 +29,8 @@ from utils.useract import UserAct, UserActionType
 from utils.beliefstate import BeliefState
 from collections import defaultdict
 
+import random
+
 
 class RecipePolicy(Service):
     """Policy module for recipe lookup dialogues.  """
@@ -58,7 +60,7 @@ class RecipePolicy(Service):
         # how many matching recipes found atm in db
         num_matches     = bs['num_matches']
 
-        self.debug_logger.error(f"num_matches={num_matches}, informs={len(informs)}")
+        self.debug_logger.error(f"num_matches={num_matches}, informs.ingredients={len(informs.get('ingredients', []))}")
         # current user act types
         user_acts       = bs['user_acts']
 
@@ -87,15 +89,30 @@ class RecipePolicy(Service):
             return { 'sys_act': SysAct(SysActionType.Select), 'sys_state': self.sys_state }
         if ua == UserActionType.PickLast and num_matches > 0 and num_matches < 5:
             return { 'sys_act': SysAct(SysActionType.Select), 'sys_state': self.sys_state }
+        if ua == UserActionType.Pick and self._has_chosen(bs):
+            return { 'sys_act': SysAct(SysActionType.Select), 'sys_state': self.sys_state }
         
         if ua == UserActionType.Request:
 
             if not self._has_chosen(bs):
                 return { 'sys_act': SysAct(SysActionType.NotYetChosen), 'sys_state': self.sys_state }
 
-            slots = bs['requests'].items()
-            for slot, v in slots:
-                self.debug_logger.error(f"{slot} {v}")
+            chosen = bs['chosen']
+            slot = list(bs['requests'].keys())[0]
+            m = "Sorry, I did not understand that request."
+            if slot == 'ease':
+                m = random.choice([
+                    "It is {} to make.",
+                    "It is {}"
+                ]).format(chosen.ease)
+            elif slot == 'name':
+                m = random.choice([
+                    "It is named {}.",
+                    "The name is {}.",
+                    "It's {}."
+                ]).format(chosen.name)
+            return { 'sys_act': SysAct(SysActionType.Inform, slot_values={message: m}), 'sys_state': self.sys_state }
+
             return { 'sys_act': SysAct(SysActionType.Bad), 'sys_state': self.sys_state }
 
 

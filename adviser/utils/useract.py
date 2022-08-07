@@ -39,6 +39,16 @@ class UserActionType(Enum):
     Ack = 'ack'
     Bad = 'bad'
     Confirm = 'confirm'
+    SelectDomain = 'selectdomain'
+    # user is presented a list of options, and picks the first one
+    PickFirst = "pickfirst"
+    # user is presented a list of options, and picks the second one
+    PickSecond = "picksecond"
+    # user is presented a list of options, and picks the last one
+    PickLast = "picklast"
+    # user is presented exactly one recipe, and confirms that is is the right one
+    Pick = "pick"
+
 
 
 class UserAct(object):

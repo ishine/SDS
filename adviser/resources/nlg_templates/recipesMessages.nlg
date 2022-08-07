@@ -29,19 +29,10 @@ template inform_alternatives(name)
 		"I'm sorry, I couldn't find another superhero."
 
 
-#------------------------ Name Slot + Slots----------------------------------#
+#------------------------ Inform ----------------------------------#
 
-template inform_byname(name, *slots)
-	"The superhero called {name} {for_entry(slots, "info", ", they ", " and they ", name)}."
-	
-	special_case name = "none"
-		"There is no such superhero who {for_entry(slots, "info", ", ", " and ", name)}."
-
-template inform_alternatives(name, *slots)
-	"The superhero {name} also {for_entry(slots, "info", ", they ", " and they ", name)}."
-	
-	special_case name = "none"
-		"There is no other course which also {for_entry(slots, "info", ", ", " and ", name)}."
+template inform(message)
+	"{message}"
 
 #------------------------ Select -------------------------------------#
 

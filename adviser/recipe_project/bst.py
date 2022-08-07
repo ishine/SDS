@@ -70,6 +70,7 @@ class RecipeBST(Service):
             self._handle_user_acts(user_acts)
             self.bs["num_matches"] = self.cnt_matching()
 
+            self.logger.error(f"[bs] after_handle_user_acts({self.bs['informs']})")
             # self.bs["discriminable"] = discriminable
         elif not self.bs['start']:
             self.bs["user_acts"] = [UserActionType.Bad]
@@ -115,6 +116,7 @@ class RecipeBST(Service):
                 continue
             if slot in slots:
                 del self.bs['informs'][slot]
+        self.logger.error(f"reset_informs({self.bs['informs']})")
 
     def _reset_requests(self):
         """

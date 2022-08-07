@@ -7,5 +7,9 @@
     "repeat": "(\\b|^| )(repeat( that| it)?|say( that | it) again|(again))",
     "reqalts": "(\\b|^| )((something|anything) else)|(different( one)*)|(another one)|(alternatives*)|(other options*)|((don'*t|do not) (want|like) (that|this)( one)*)",
     "dontcare": "(anything(?! else)|((any$|any kind)|(i )*(don'?t|do not) (care|know|mind))($|(?! (a?bout|of|what))|( (a?bout|of|what) (type|kind)(?! of))| a?bout (that|this))|(any(thing)? (is )*(fine|ok\\b|okay|will do))($| and| but)|(it )?(doesn'?t|does not) matter)+",
-    "req_everything": "(\\b|^| )(((say|tell( me)?)|(want|need) to know)( everything)? about)"
+    "req_everything": "(\\b|^| )(((say|tell( me)?)|(want|need) to know)( everything)? about)",
+    "pickfirst": "(\\b|^|\\ )((i|let's) (take|choose|want|pick) the first( one)?|(the )?first( one)?( please)?)\\b",
+    "picksecond": "(\\b|^|\\ )((i|let's) (take|choose|want|pick) the second( one)?|(the )?second( one)?( please)?)\\b",
+    "picklast": "(\\b|^|\\ )((i|let's) (take|choose|want|pick) the last( one)?|(the )?last( one)?( please)?)\\b",
+    "pick": "(\\b|^|\\ )(okay, )?i take that one|let's take that one|sounds good|okay|i take it\\b"
 }

@@ -82,6 +82,10 @@ class RecipeNLG(Service):
             'Always glad to help. Bye!'
             ]) 
 
+        elif sys_act.type == SysActionType.NotFound:
+            return random.choice(
+                ["Sorry, I did not find anything in my database.",
+                "Sorry, I cannot find anything in my database for that."])
 
         rule_found = True
         message = ""

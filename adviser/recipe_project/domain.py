@@ -71,6 +71,8 @@ class RecipeDomain(JSONLookupDomain):
 
     def find_recipes(self, request: RecipeReq) -> List[Recipe]:
 
+        if request.is_empty():
+            return []
         q = ""
         if len(request.ingredients) > 0:
             q += "".join(f" AND LOWER(ingredients) LIKE '%{i.lower()}%' " for i in request.ingredients)

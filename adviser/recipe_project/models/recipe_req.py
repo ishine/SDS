@@ -31,3 +31,11 @@ class RecipeReq:
             
 
         return req
+
+    def is_empty(self):
+        return (len(self.ingredients) == 0 
+            and self.ease is None 
+            and self.rating is None
+            and self.prep_time is None
+            and self.cookbook is None
+            and self.name is None)

@@ -60,6 +60,9 @@ class RecipePolicy(Service):
         # how many matching recipes found atm in db
         num_matches     = bs['num_matches']
 
+        # last user acts 
+        last_ua         = bs['last_user_acts'] if 'last_user_acts' in bs else []
+
         self.debug_logger.error(f"num_matches={num_matches}, informs.ingredients={len(informs.get('ingredients', []))}")
         # current user act types
         user_acts       = bs['user_acts']
@@ -89,7 +92,7 @@ class RecipePolicy(Service):
             return { 'sys_act': SysAct(SysActionType.Select), 'sys_state': self.sys_state }
         if ua == UserActionType.PickLast and num_matches > 0 and num_matches < 5:
             return { 'sys_act': SysAct(SysActionType.Select), 'sys_state': self.sys_state }
-        if ua == UserActionType.Pick and self._has_chosen(bs):
+        if ua == UserActionType.Affirm and self._has_chosen(bs):
             return { 'sys_act': SysAct(SysActionType.Select), 'sys_state': self.sys_state }
         
         if ua == UserActionType.Request:
@@ -97,23 +100,20 @@ class RecipePolicy(Service):
             if not self._has_chosen(bs):
                 return { 'sys_act': SysAct(SysActionType.NotYetChosen), 'sys_state': self.sys_state }
 
-            chosen = bs['chosen']
-            slot = list(bs['requests'].keys())[0]
-            m = "Sorry, I did not understand that request."
+            chosen  = bs['chosen']
+            slot    = list(bs['requests'].keys())[0]
+            m       = "Sorry, I did not understand that request."
             if slot == 'ease':
-                m = random.choice([
-                    "It is {} to make.",
-                    "It is {}"
-                ]).format(chosen.ease)
+                m = self._inform_ease(chosen.ease)
             elif slot == 'name':
-                m = random.choice([
-                    "It is named {}.",
-                    "The name is {}.",
-                    "It's {}."
-                ]).format(chosen.name)
-            return { 'sys_act': SysAct(SysActionType.Inform, slot_values={message: m}), 'sys_state': self.sys_state }
-
-            return { 'sys_act': SysAct(SysActionType.Bad), 'sys_state': self.sys_state }
+                m = self._inform_ease(chosen.name)
+            elif slot == 'cookbook':
+                m = self._inform_book(chosen.book)
+            elif slot == 'page':
+                m = self._inform_page(chosen.page)
+            elif slot == 'ingredients':
+                m = self._inform_ingredients(chosen.ingredients)
+            return { 'sys_act': SysAct(SysActionType.Inform, slot_values={'message': m}), 'sys_state': self.sys_state }
 
 
         if informs and len(informs) > 0:
@@ -125,6 +125,10 @@ class RecipePolicy(Service):
             if cnt == 0:
                 return self._not_found()
             if cnt == 1:
+                if 'name' in informs and len(informs['name'].keys()) > 0 and list(informs['name'].keys())[0].casefold() == found[0].name.casefold():
+                    return { 'sys_act': SysAct(SysActionType.Select), 'sys_state': self.sys_state }
+                if not self._has_chosen(bs):
+                    return self._narrowed_down_to_one(found[0])
                 return self._found_one(found[0])
             if cnt < 5:
                 return self._found_some(found)
@@ -155,6 +159,10 @@ class RecipePolicy(Service):
     def _found_too_many(self) -> dict:
 
         return { 'sys_act': SysAct(SysActionType.FoundTooMany), 'sys_state': self.sys_state }
+
+    def _narrowed_down_to_one(self, recipe: Recipe) -> dict:
+
+        return { 'sys_act': SysAct(SysActionType.NarrowedDownToOne, slot_values={'name': recipe.name}), 'sys_state': self.sys_state }
 
     def _fetch_by_name(self, value: str) -> dict:
 
@@ -190,22 +198,55 @@ class RecipePolicy(Service):
         
         return (None, 0)
 
-    def _inform_ingredients(self, value: str) -> dict:
+    def _inform_ease(self, ease: str) -> str:
+        if ease.casefold() == "average":
+            ease = random.choice(["neither hard nor simple", "not too difficult, but also not too easy"])
 
-        if not isinstance(value, str):
-            raise Exception(f"value should be a str, but is {str(type(value))}: {str(value)}")
+        return random.choice([
+            "It is {} to make.",
+            "It is {}."
+        ]).format(ease)
 
-        found = self.domain.find_recipes_by_ingredients([value])
+    def _inform_name(self, name: str) -> str:
+        return random.choice([
+                "It is named {}.",
+                "The name is {}.",
+                "It's {}."
+        ]).format(name)
 
-        if len(found) > 1:
-            self.sys_state['waiting_for_filter'] = found
-            self.sys_state['current_suggested_recipe'] = None
-            return ({ 'names': ',\n'.join(r['name'] for r in found)}, len(found))
+    def _inform_book(self, book: str) -> str:
+        return random.choice([
+                "It is in the book named {}.",
+                "The name of the book is {}.",
+                "It's {}."
+        ]).format(book)
 
-        elif len(found) == 1:
-            self.sys_state['waiting_for_filter'] = None
-            self.sys_state['current_suggested_recipe'] = found[0]
-            return ({ 'name':  found[0]['name']}, 1)
+    def _inform_page(self, page: str) -> str:
+        return random.choice([
+                "It is on page {}.",
+                "It's page {}."
+        ]).format(page)
+
+    def _inform_ingredients(self, ingredients: str) -> str:
+        spl = ingredients.split(',')
+        if len(spl) == 2:
+            return random.choice([
+                    f"The ingredients are {spl[0]} and {spl[1]}.",
+                    f"You will need {spl[0]} and {spl[1]}."
+            ])
+        if len(spl) == 1:
+            return random.choice([
+                    f"The only ingredient is {spl[0]}.",
+                    f"You will only need {spl[0]}."
+            ])
+
+        head = ", ".join(spl[:-1])
+        tail = spl[-1]
+        return random.choice([
+                f"The ingredients are {head} and {tail}.",
+                f"You will need {head} and {tail}."
+        ])
+
 
 
 

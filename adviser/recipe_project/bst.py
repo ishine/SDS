@@ -165,6 +165,8 @@ class RecipeBST(Service):
                     self.bs['informs'][act.slot][act.value] = act.score
                 else:
                     self.bs['informs'][act.slot] = {act.value: act.score}
+                if act.slot == 'name' and self.cnt_matching() == 1:
+                    self.bs['chosen'] = self.matching()[0]
 
             elif act.type == UserActionType.PickFirst and num_matches > 0 and num_matches < 5:
                 self.bs['chosen'] = self.matching()[0]
@@ -172,6 +174,8 @@ class RecipeBST(Service):
                 self.bs['chosen'] = self.matching()[1]
             elif act.type == UserActionType.PickLast and num_matches > 0 and num_matches < 5:
                 self.bs['chosen'] = self.matching()[:-1]
+            elif act.type == UserActionType.Affirm and num_matches == 1:
+                self.bs['chosen'] = self.matching()[0]
 
             elif act.type == UserActionType.NegativeInform:
                 # reset mentioned value to zero probability

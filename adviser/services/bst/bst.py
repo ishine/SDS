@@ -54,6 +54,7 @@ class HandcraftedBST(Service):
         # save last turn to memory
         self.bs.start_new_turn()
         if user_acts:
+            self.bs["last_user_acts"] = self.bs.get("user_acts", None)
             self._reset_informs(user_acts)
             self._reset_requests()
             self.bs["user_acts"] = self._get_all_usr_action_types(user_acts)

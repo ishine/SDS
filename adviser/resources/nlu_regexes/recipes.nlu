@@ -4,20 +4,21 @@
 # ----------------------
 
 rule inform(ingredients)
-    "I (want|plan|need) to (cook|prepare|do) {recipe_syn()} (with|having|that includes|using|that uses) {ingredients}s?"
-    "(Can you )?(Tell|suggest|give|pick|choose)( me)? {recipe_syn()} (from cookbook )?(with|having) {ingredients}s?"
+    "I (want|plan|need) to {cook_syn()} {recipe_syn()} (with|having|that includes|that contains|using|that uses) {ingredients}s?"
+    "(can you )?(tell|suggest|give|pick|choose|find|fetch)( me)? {recipe_syn()} (from cookbook )?(with|having|that (has|contains|includes|uses|makes use of)) {ingredients}s?"
     "Do you have (a recipe|something|a meal) with {ingredients}s?"
     "Do you have (a recipe|something|a meal) that (includes|uses) {ingredients}s?"
     "Whats a {recipe_syn()} with {ingredients}s?"
     "For (which|what) {recipe_syn()} can I use {ingredients}s?"
     "(what|which) {recipe_syn()} can I use {ingredients}s? for"
 
-    "it should also contain {ingredients}s?"
+    "(and )?(it|the recipe|the meal) should (also )?(contain|have|use) {ingredients}s?"
+    "^{ingredients}$"
 
 
 rule inform(ease)
-    "(Suggest|Tell|Give) me some recipe (from cookbook )?that is {ease} (to make)?"
-    "I want to cook something that is {ease} (to make)?"
+    "(suggest|pick|tell|give|find|fetch)( me)?( some| an?)? {recipe_syn()} (that|which) is {ease}( to make)?"
+    "I want to {cook_syn()} something that is {ease}( to make)?"
     "I want to cook (a|an) {ease} recipe"
     "I want to cook a recipe (that|which) is (quite )?{ease}"
     "Do you have a recipe that is {ease} to make"
@@ -38,9 +39,10 @@ rule inform(notes)
 
 rule inform(name)
     "I want to cook {name}"
-    "{name}"
+    "^{name}$"
     "Tell me how to cook {name}"
     "I (shall )?pick {name}"
+    "do you have the {recipe_syn()} for {name}"
 
 
 rule inform(prep_time)
@@ -80,19 +82,29 @@ rule inform(ease, ingredients)
 rule request(name)
     "what is the name of that {recipe_syn()}"
     "what's the name( again)? of that {recipe_syn()}"
-    "can you tell me the name again"
+    "can you tell me (the|its) name again"
+    "what is (the|its) name"
+    "what's (the|its) name"
 
 rule request(prep_time)
-    "what is the preparation time of this recipe" 
+    "what is the (prep(aration)?|cooking) time of this recipe" 
+    "what's the (prep(aration)?|cooking) time of this recipe" 
+    "how (long|much time|many minutes) does it take to {cook_syn()}"
+    "is this recipe (quick|fast|slow) to {cook_syn()}"
 
 rule request(cookbook)
-    "from which cookbook is this recipe from"
+    "(from )?(which|what) (cook ?)?book is ((this|that|the) {recipe_syn()}|it) (from|in)"
+    "where can i find ((this|that|the) {recipe_syn()}|it)"
+    "in which (cook ?)?book can i find ((this|that|the) {recipe_syn()}|it)"
 
 rule request(page)
-    "on which page of the cookbook is this recipe"
+    "on (which|what) page of the (cook ?)?book is this {recipe_syn()}"
+    "where in the (cook ?)?book can I find ((this|that|the) {recipe_syn()}|it)"
 
 rule request(ingredients)
-    "what are the ingredients of this recipe"
+    "what are the ingredients( of this {recipe_syn()})?"
+    "what are its ingredients"
+    "what (will|do) i need( for (that|this)( {recipe_syn()})?)?"
     "(can you )?list( me)? the ingredients"
     "what do i need for (this|that|the) {recipe_syn()}"
 
@@ -109,6 +121,10 @@ rule request(rating)
 
 rule request(type)
     "what kind of dish is this"
+    "is (this|that|it) a (dinner|breakfast|lunch) dish"
+    "is (this|that|it) suitable for (dinner|breakfast|lunch)"
+    "is this a (dinner|breakfast|lunch) dish"
+
 
 rule request(notes)
     "do I have any notes on that recipe"

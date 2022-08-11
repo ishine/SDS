@@ -79,11 +79,11 @@ class RecipeDomain(JSONLookupDomain):
         if request.ease is not None:
             q += f" AND lower(ease) in {self._expand_ease(request.ease)} "
         if request.cookbook is not None:
-            q += f" AND lower(cookbook) = {request.cookbook} "
+            q += f" AND lower(cookbook) = '{request.cookbook.lower()}' "
         if request.name is not None:
-            q += f" AND lower(name) = {request.name} "
+            q += f" AND lower(name) = '{request.name.lower()}' "
         if request.rating is not None:
-            q += f" AND rating = {request.rating} "
+            q += f" AND rating = '{request.rating}' "
 
         if len(q) > 0:
             q = q[4:]

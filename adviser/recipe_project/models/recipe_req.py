@@ -13,7 +13,7 @@ class RecipeReq:
     def from_informs(informs):
         req = RecipeReq()
         for slot, value in informs.items():
-            vk = value.keys()
+            vk = list(value.keys())
             if slot == 'ingredients':
                 for ingredient in vk:
                     req.ingredients.append(ingredient)

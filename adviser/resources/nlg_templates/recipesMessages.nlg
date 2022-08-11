@@ -63,6 +63,11 @@ template found_some()
 template found_too_many()
 	"I found many recipes for that, can you narrow down a bit?"
 
+#------------------------ Narrowed down to one ----------------------------------#
+
+template narrowed_down_to_one(name)
+	"That leaves only one result, {name}."
+
 # ----------------------------System Confirm----------------------------------#
 
 template confirm()

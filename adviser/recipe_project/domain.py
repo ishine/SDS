@@ -92,6 +92,27 @@ class RecipeDomain(JSONLookupDomain):
             q = "SELECT * FROM {}".format(self.get_domain_name())
         return [Recipe.from_db(r) for r in self.query_db(q)]
         
+    def get_random(self) -> Recipe:
+
+        q = "SELECT * FROM {} ORDER BY RANODM() LIMIT 1".format(self.get_domain_name())
+        r = self.query_db(q)
+
+        return Recipe.from_db(r[0])
+
+    def get_users_favs(self) -> List[Recipe]:
+        q = "SELECT * FROM {} WHERE favorite = true".format(self.get_domain_name())
+        r = self.query_db(q)
+        return [Recipe.from_db(r) for r in self.query_db(q)]
+
+    def set_favorite(self, name: str):
+        q = "UPDATE {} SET favorite = true WHERE name = '{}'".format(self.get_domain_name(), name)
+        self.query_db(q)
+
+    def unset_favorite(self, name: str):
+        q = "UPDATE {} SET favorite = false WHERE name = '{}'".format(self.get_domain_name(), name)
+        self.query_db(q)
+
+
 
     def _expand_ease(self, ease: str):
 
@@ -100,6 +121,7 @@ class RecipeDomain(JSONLookupDomain):
         if ease.casefold() in ["not too hard", "not too difficult"]:
             return "('super simple', 'fairly easy', 'average')"
         return f"('{ease}')"
+
 
 
 

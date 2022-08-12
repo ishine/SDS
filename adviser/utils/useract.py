@@ -48,6 +48,16 @@ class UserActionType(Enum):
     PickLast = "picklast"
     # user is presented exactly one recipe, and confirms that is is the right one
     Pick = "pick"
+    # user wants a random recipe
+    RequestRandom = 'request_random'
+    # start over
+    StartOver = 'start_over'
+    # save as favorite
+    SaveAsFav = 'save_as_fav'
+    # remove from favs
+    RemoveFromFavs = 'remove_from_favs'
+    # list favorites
+    ListFavs = 'list_favs'
 
 
 

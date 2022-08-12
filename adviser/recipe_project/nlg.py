@@ -87,6 +87,16 @@ class RecipeNLG(Service):
                 ["Sorry, I did not find anything in my database.",
                 "Sorry, I cannot find anything in my database for that."])
 
+        elif sys_act.type == SysActionType.StartOver:
+            return random.choice(
+                ["Okay, let's start again from the beginning. How can I help you?",
+                "Okay, let's start over. How can I help you?"])
+
+        elif sys_act.type == SysActionType.NotYetChosen:
+            return random.choice(
+                ["Please choose a recipe first.",
+                "You have to first pick a recipe."])
+
         rule_found = True
         message = ""
         try:

@@ -64,13 +64,8 @@ rule inform(rating)
     "(Suggest|Tell|Give) (me )? a recipe (with|having) {rating} star(s)?"
     "(Suggest|Tell) (me )?(a )?{rating} star rating recipe"
     "Do you have a recipe with {rating} stars"
-    "Do you have a {rating} star rating recipe"
+    "Do you have a {rating} star rated recipe"
 
-rule inform(ease, prep_time)
-    "I want a recipe that is {ease} and {prep_time} to cook"
-
-rule inform(ease, ingredients)
-    "I want an {ease} recipe with {ingredients}"
     
 
 
@@ -109,7 +104,7 @@ rule request(ingredients)
     "what do i need for (this|that|the) {recipe_syn()}"
 
 rule request(last_made)
-    "when did I last make this recipe"
+    "when did I last make this {recipe_syn()}"
 
 rule request(ease)
     "how (easy|hard|simple|difficult) is (this|that)"
@@ -117,7 +112,9 @@ rule request(ease)
     "is (this {recipe_syn()}|it) (easy|hard|simple|difficult) to {cook_syn()}"
 
 rule request(rating)
-    "what is the rating of this recipe"
+    "what is the rating of this {recipe_syn()}"
+    "how is this {recipe_syn()} rated"
+    "how many stars does this {recipe_syn()} have"
 
 rule request(type)
     "what kind of dish is this"
@@ -127,7 +124,7 @@ rule request(type)
 
 
 rule request(notes)
-    "do I have any notes on that recipe"
+    "do I have any notes on that {recipe_syn()}"
 
 rule request(make_it_next)
     "did I mark this as make it next"

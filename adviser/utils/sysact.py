@@ -51,6 +51,8 @@ class SysActionType(Enum):
     NotYetChosen = 'not_yet_chosen'
     # inform user that his favorites have been updated
     UpdatedFavorites = 'updated_favorites'
+    # restart the dialogue
+    StartOver = 'start_over'
 
 
 

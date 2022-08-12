@@ -76,23 +76,23 @@ class RecipeNLG(Service):
                 'Sorry, I could not understand you.',
                 'I\'m afraid I don\'t understand.'
             ])
-        elif sys_act.type == SysActionType.Bye:
+        if sys_act.type == SysActionType.Bye:
             return  random.choice(['Thank you, good bye.',
             'I hope I could be of any help, see you.',
             'Always glad to help. Bye!'
             ]) 
 
-        elif sys_act.type == SysActionType.NotFound:
+        if sys_act.type == SysActionType.NotFound:
             return random.choice(
                 ["Sorry, I did not find anything in my database.",
                 "Sorry, I cannot find anything in my database for that."])
 
-        elif sys_act.type == SysActionType.StartOver:
+        if sys_act.type == SysActionType.StartOver:
             return random.choice(
                 ["Okay, let's start again from the beginning. How can I help you?",
                 "Okay, let's start over. How can I help you?"])
 
-        elif sys_act.type == SysActionType.NotYetChosen:
+        if sys_act.type == SysActionType.NotYetChosen:
             return random.choice(
                 ["Please choose a recipe first.",
                 "You have to first pick a recipe."])

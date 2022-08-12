@@ -18,6 +18,7 @@
 ###############################################################################
 
 from typing import List, Set
+from adviser.recipe_project.models.recipe import Recipe
 
 from services.service import PublishSubscribe
 from services.service import Service
@@ -35,6 +36,13 @@ class RecipeBST(Service):
         Service.__init__(self, domain=domain)
         self.logger = logger
         self.bs = BeliefState(domain)
+
+    
+
+    @PublishSubscribe(sub_topics=["chosen"], pub_topics=[])
+    def set_chosen(self, chosen: Recipe):
+        self.bs['chosen'] = chosen
+    
 
     @PublishSubscribe(sub_topics=["user_acts"], pub_topics=["beliefstate"])
     def update_bst(self, user_acts: List[UserAct] = None) \
@@ -168,6 +176,8 @@ class RecipeBST(Service):
                 if act.slot == 'name' and self.cnt_matching() == 1:
                     self.bs['chosen'] = self.matching()[0]
 
+            elif act.type == UserActionType.RequestRandom:
+                self.bs['chosen'] = self.domain.get_random()
             elif act.type == UserActionType.PickFirst and num_matches > 0 and num_matches < 5:
                 self.bs['chosen'] = self.matching()[0]
             elif act.type == UserActionType.PickSecond and num_matches > 0 and num_matches < 5:
@@ -187,3 +197,6 @@ class RecipeBST(Service):
                 # This way it is clear that the user is no longer asking about that one item
                 if self.domain.get_primary_key() in self.bs['informs']:
                     del self.bs['informs'][self.domain.get_primary_key()]
+
+            elif act.type == UserActionType.StartOver:
+                self.bs = BeliefState(self.domain)

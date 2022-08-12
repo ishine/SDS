@@ -92,15 +92,10 @@ template reqmore()
 	"Can I help you with anything else?"
 
 
+# ---------------------------System UpdatedFavorites------------------------------#
 
-# ---------------------------System Select----------------------------------#
+template updated_favorites()
+	"I updated your favorites."
 
-template select(*slot)
-	"Sorry, would you like to have a superhero {for_entry(slot, "info_or_dontcare_list", "", "")}?"
 
-function info_or_dontcare_list(slot, value_list)
-	"{for(value_list, "info_or_dontcare", ", ", " or ", slot)}"
 
-function info_or_dontcare(value, slot)
-	"which {info(slot, value, "none")}"
-	special_case value = "dontcare": "you don't care"

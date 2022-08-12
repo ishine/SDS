@@ -37,12 +37,20 @@ class SysActionType(Enum):
     Bye = 'closingmsg'
     ConfirmRequest = 'confreq'
     Inform = 'inform'
+    # found some matching recipes
     FoundSome = 'found_some'
+    # found exactly one matching recipe
     FoundOne = 'found_one'
+    # found many matching recipes
     FoundTooMany = 'found_too_many'
+    # found no matching recipe
     NotFound = 'not_found'
+    # further restricted selection to one recipe
     NarrowedDownToOne = 'narrowed_down_to_one'
+    # inform user that he has to choose a recipe first
     NotYetChosen = 'not_yet_chosen'
+    # inform user that his favorites have been updated
+    UpdatedFavorites = 'updated_favorites'
 
 
 

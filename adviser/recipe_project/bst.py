@@ -18,7 +18,7 @@
 ###############################################################################
 
 from typing import List, Set
-from adviser.recipe_project.models.recipe import Recipe
+from .models.recipe import Recipe
 
 from services.service import PublishSubscribe
 from services.service import Service
@@ -39,10 +39,6 @@ class RecipeBST(Service):
 
     
 
-    @PublishSubscribe(sub_topics=["chosen"], pub_topics=[])
-    def set_chosen(self, chosen: Recipe):
-        self.bs['chosen'] = chosen
-    
 
     @PublishSubscribe(sub_topics=["user_acts"], pub_topics=["beliefstate"])
     def update_bst(self, user_acts: List[UserAct] = None) \

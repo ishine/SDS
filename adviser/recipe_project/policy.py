@@ -47,7 +47,8 @@ class RecipePolicy(Service):
     def __init__(self, domain: RecipeDomain, logger: DiasysLogger = DiasysLogger()):
         Service.__init__(self, domain=domain, debug_logger=logger)
 
-        self.state = PolicyState.START
+        self.state      = PolicyState.START
+        self.sys_state  = {}
 
     
 
@@ -72,8 +73,8 @@ class RecipePolicy(Service):
             return { 'sys_act': SysAct(SysActionType.Welcome), 'sys_state': self.sys_state}
 
         ua              = list(user_acts)[0]
-        self.debug_logger.error(f"UAs={user_acts}")
 
+        self.debug_logger.error(f"UAs={user_acts}")
         if ua == UserActionType.Hello:
             return { 'sys_act': SysAct(SysActionType.Welcome), 'sys_state': self.sys_state }
 
@@ -105,7 +106,7 @@ class RecipePolicy(Service):
 
         if ua == UserActionType.RequestRandom:
             self.state = PolicyState.LISTED_RAND
-            return { 'sys_act': SysAct(SysActionType.Select), 'sys_state': self.sys_state }
+            return self._suggest_one(bs['chosen'])
 
         if ua == UserActionType.ListFavs:
             favs = self.domain.get_users_favs()
@@ -220,6 +221,11 @@ class RecipePolicy(Service):
     def _narrowed_down_to_one(self, recipe: Recipe) -> dict:
 
         return { 'sys_act': SysAct(SysActionType.NarrowedDownToOne, slot_values={'name': recipe.name}), 'sys_state': self.sys_state }
+
+    def _suggest_one(self, recipe: Recipe) -> dict:
+
+        return { 'sys_act': SysAct(SysActionType.Inform, slot_values={'message': f"How about {recipe.name}?"}), 'sys_state': self.sys_state }
+
 
     #
     # Helpers to inform about different informables

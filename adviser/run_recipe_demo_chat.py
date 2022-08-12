@@ -2,13 +2,13 @@ from services.domain_tracker import DomainTracker
 from recipe_project.nlg import RecipeNLG
 from recipe_project.policy import RecipePolicy
 from recipe_project.domain import RecipeDomain
+from recipe_project.nlu import RecipeNLU
 from recipe_project.bst import RecipeBST
 from services.service import DialogSystem
 from services.hci import ConsoleOutput
 from services.nlg import HandcraftedNLG
 from services.policy import HandcraftedPolicy
 from services.bst import HandcraftedBST
-from services.nlu import HandcraftedNLU
 from services.hci import ConsoleInput
 from utils.domain.jsonlookupdomain import JSONLookupDomain
 from utils.logger import DiasysLogger, LogLevel
@@ -57,8 +57,8 @@ if __name__ == "__main__":
     # 1. Create a JSONLookupDomain object for the "recipes" domain
     domain      = RecipeDomain()
 
-    # nlu     = RecipeNLU(domain=domain)
-    nlu         = HandcraftedNLU(domain=domain, logger=logger)
+    nlu         = RecipeNLU(domain=domain, logger=logger)
+    # nlu         = HandcraftedNLU(domain=domain, logger=logger)
     nlg         = RecipeNLG(domain=domain, logger=logger)
 
     bst         = RecipeBST(domain=domain, logger=logger)

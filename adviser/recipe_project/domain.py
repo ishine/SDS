@@ -19,22 +19,12 @@
 
 from typing import List, Iterable
 from utils.domain.jsonlookupdomain import JSONLookupDomain
-from examples.webapi.mensa.parser import MensaParser, DishType
 from .models.recipe_req import RecipeReq
 from .models.recipe import Recipe
 
-SLOT_VALUES = {
-    'day': ['today', 'tomorrow', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-    'type': [DishType.Starter.value, DishType.Buffet.value, DishType.MainDish.value,
-             DishType.SideDish.value, DishType.Dessert.value],
-    'vegan': ['true', 'false'],
-    'vegetarian': ['true', 'false'],
-    'fish': ['true', 'false'],
-    'pork': ['true', 'false'],
-}
 
 class RecipeDomain(JSONLookupDomain):
-    """Domain for the Mensa API
+    """Domain for the Recipe Database
 
     Attributes:
         last_results (List[dict]): Current results which the user might request info about
@@ -94,7 +84,7 @@ class RecipeDomain(JSONLookupDomain):
         
     def get_random(self) -> Recipe:
 
-        q = "SELECT * FROM {} ORDER BY RANODM() LIMIT 1".format(self.get_domain_name())
+        q = "SELECT * FROM {} ORDER BY RANDOM() LIMIT 1".format(self.get_domain_name())
         r = self.query_db(q)
 
         return Recipe.from_db(r[0])

@@ -1,8 +1,8 @@
 {
-    "hello": "(\\b|^| )(hi|hello|howdy|hey)(\\b|$| )",
+    "hello": "^ *(hi|hello|howdy|hey[ao]?) *$",
     "bye": "(\\b|^| )(bye(-)?(bye)?|good(-)?bye|that'?s? (is )*all)(\\s|$| |\\.)",
     "deny": "((\\b|^| )(n(o)?|wrong|incorrect|error|nope)|(not (true|correct|right)))(\\s)?$",
-    "affirm": "((yes|yeah|(\\b|^)ok\\b|(\\b|^)OK|okay|sure|i (take|pick|choose|want) that one|sounds good|i take it|let's take (that|this)( one)?|perfect|^y$|(\\b|^)yep(\\b|$)|(that('?s| is) )?(?<!not )(?<!no )(right|correct|confirm)))(\\s)?$",
+    "affirm": "((yes|yeah|(\\b|^)ok(ay)?\\b|(\\b|^)OK|okay|sure|i (take|pick|choose|want) that one|sounds good|i take it|let's take (that|this)( one)?|perfect|^y$|(\\b|^)yep(\\b|$)|(that('?s| is) )?(?<!not )(?<!no )(right|correct|confirm)))(\\s)?$",
     "thanks": "(?=.*(^( )?)(((great|good|awesome|nice|cool) )?((that((')?s| (is|was)) (very )?helpful) )?(thank|thank(s| you)( (very|so) much)?)( (that((')?s| (is|was)) (very )?helpful))?|((great|good|awesome|nice|cool) )?(that((')?s| (is|was)) (very )?helpful)|(great|good|awesome|nice|cool))(( )*))(?=^(?:(?!bye).)*$).*$",
     "repeat": "(\\b|^| )(repeat( that| it)?|say( that | it) again|(again))",
     "reqalts": "(\\b|^| )((something|anything) else)|(different( one)*)|(another one)|(alternatives*)|(other options*)|((don'*t|do not) (want|like) (that|this)( one)*)",

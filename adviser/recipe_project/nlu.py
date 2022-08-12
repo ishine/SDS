@@ -32,6 +32,22 @@ class RecipeNLU(Service):
             if user_utterance.replace(' ', '').endswith(bye):
                 return {'user_acts': [UserAct(user_utterance, UserActionType.Bye)]}
 
+        # request a random recipe
+        if re.match("(\\b|^| )random (recipe|meal|food).*", user_utterance, flags=re.I):
+            return {'user_acts': [UserAct(user_utterance, UserActionType.RequestRandom)]}
+
+        # start over (useful for debugging)
+        if re.match("(\\b|^| )start (over|from the beginning).*", user_utterance, flags=re.I):
+            return {'user_acts': [UserAct(user_utterance, UserActionType.StartOver)]}
+
+        # save as favorite
+        if re.match("(\\b|^| )((can you( please)?|please )?(save|mark) (this|that)( recipe|food|meal)? (as a favorite|to my favorites)"
+            "|save to favorites?)", user_utterance, flags=re.I):
+            return {'user_acts': [UserAct(user_utterance, UserActionType.SaveAsFav)]}
+
+        # list favorites
+        if re.match("(\\b|^| )(list my favorite|what are my favorite)", user_utterance, flags=re.I):
+            return {'user_acts': [UserAct(user_utterance, UserActionType.ListFavs)]}
         
         self.debug_logger.dialog_turn("User Actions: %s" % str(user_acts))
         return {'user_acts': user_acts}

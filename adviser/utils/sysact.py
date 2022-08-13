@@ -37,6 +37,8 @@ class SysActionType(Enum):
     Bye = 'closingmsg'
     ConfirmRequest = 'confreq'
     Inform = 'inform'
+    # unknown ingredient
+    UnknownIngredient = 'unknown_ingredient'
     # found some matching recipes
     FoundSome = 'found_some'
     # found exactly one matching recipe
@@ -51,6 +53,8 @@ class SysActionType(Enum):
     NotYetChosen = 'not_yet_chosen'
     # inform user that his favorites have been updated
     UpdatedFavorites = 'updated_favorites'
+    # as if a partial search should be done
+    AskForPartialSearch = 'ask_for_partial_search'
     # restart the dialogue
     StartOver = 'start_over'
 

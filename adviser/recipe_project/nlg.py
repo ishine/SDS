@@ -21,6 +21,8 @@ from utils import DiasysLogger
 from utils import SysAct, SysActionType
 from services.service import Service, PublishSubscribe
 from services.nlg.templates.templatefile import TemplateFile
+from .policy import PolicyStateView, PolicyState
+from typing import Optional
 import random
 import os
 
@@ -38,10 +40,19 @@ class RecipeNLG(Service):
         self.template_filename = os.path.join(
                     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                     'resources/nlg_templates/%sMessages.nlg' % self.domain.get_domain_name())
+        
+        self.policy_state_view : Optional[PolicyStateView] = None
         self.templates = TemplateFile(self.template_filename, self.domain)
 
-    @PublishSubscribe(sub_topics=["sys_act"], pub_topics=["sys_utterance"])
-    def publish_system_utterance(self, sys_act: SysAct = None) -> dict(sys_utterance=str):
+
+    # @PublishSubscribe(sub_topics=["policy_state"])
+    # def _update_policy_state(self, policy_state: PolicyStateView):
+
+    #     self.policy_state_view = policy_state
+
+
+    @PublishSubscribe(sub_topics=["sys_act", "policy_state"], pub_topics=["sys_utterance"])
+    def publish_system_utterance(self, sys_act: SysAct = None, policy_state: PolicyStateView = None) -> dict(sys_utterance=str):
         """Generates the system utterance and publishes it.
 
         Args:
@@ -50,6 +61,7 @@ class RecipeNLG(Service):
         Returns:
             dict: a dict containing the system utterance
         """
+        self.policy_state_view = policy_state
         return {'sys_utterance': self.generate_system_utterance(sys_act)}
 
     def generate_system_utterance(self, sys_act: SysAct = None) -> dict(sys_utterance=str):
@@ -62,7 +74,7 @@ class RecipeNLG(Service):
             dict with "sys_utterance" as key and the system utterance as value
         """
 
-        # don't know how to introduce randomness in NLG template, so for hello/bye,
+        # don't know how to introduce randomness in NLG template, so for some actions,
         # we don't use the nlg templates.
         if sys_act is None or sys_act.type == SysActionType.Welcome:
             return random.choice([
@@ -83,6 +95,10 @@ class RecipeNLG(Service):
             ]) 
 
         if sys_act.type == SysActionType.NotFound:
+            self.logger.error(f"{self.policy_state_view.sys_act_history}")
+            if self.policy_state_view.match_last_sys_acts([SysActionType.NotFound, SysActionType.FoundTooMany]):
+                return "Sorry, that would narrow it down to 0 results."
+
             return random.choice(
                 ["Sorry, I did not find anything in my database.",
                 "Sorry, I cannot find anything in my database for that."])
@@ -96,6 +112,23 @@ class RecipeNLG(Service):
             return random.choice(
                 ["Please choose a recipe first.",
                 "You have to first pick a recipe."])
+
+        if sys_act.type == SysActionType.UnknownIngredient:
+            return random.choice(
+                ["I don't know that ingredient, sorry.",
+                "I don't have anything with that ingredient in my database, sorry."])
+
+        if sys_act.type == SysActionType.AskForPartialSearch:
+            return "I found no exact matches. But there are recipes that satisfy at least some of your constraints. Do you want to hear them?"
+
+        if sys_act.type == SysActionType.FoundTooMany:
+            if self.policy_state_view.match_last_sys_acts([SysActionType.FoundTooMany, SysActionType.FoundTooMany]):
+                return random.choice(
+                ["I still found many recipes matching your criteria, please provide more information.",
+                "There are still too many recipes matching your request, please give me more information."])
+            return random.choice(
+                ["I found many recipes, maybe you can give me some more information?",
+                "A lot of recipes are fitting your request. Can you give me some more information?"])
 
         rule_found = True
         message = ""

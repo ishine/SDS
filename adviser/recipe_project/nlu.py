@@ -4,12 +4,14 @@ import os
 from datetime import datetime, timedelta
 from typing import List
 
-from utils import UserAct, UserActionType, DiasysLogger, SysAct, BeliefState
+from utils import UserAct, UserActionType, DiasysLogger, SysAct, SysActionType, BeliefState
 from services.service import Service, PublishSubscribe
+from .policy import PolicyStateView
 
 def get_root_dir():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+UNK_ING : str        = "UNK_ING"
 
 class RecipeNLU(Service):
     """NLU for the recipe bot. Code mostly taken from HandcraftedNLU, with some added checks that 
@@ -31,10 +33,11 @@ class RecipeNLU(Service):
         # Getting the relative path where regexes are stored
         self.base_folder = os.path.join(get_root_dir(), 'resources', 'nlu_regexes')
 
-        # Setting previous system act to None to signal the first turn
-        # self.prev_sys_act = None
-        self.sys_act_info = {
-            'last_act': None, 'lastInformedPrimKeyVal': None, 'lastRequestSlot': None}
+        self.policy_state_view : Optional[PolicyStateView] = None
+
+        # Holds a set of all ingredients occurring in the domain db after initialization
+        self.ingredients    = set()
+
         self._initialize()
 
     def dialog_start(self) -> dict:
@@ -46,8 +49,6 @@ class RecipeNLU(Service):
             Empty dictionary
 
         """
-        self.sys_act_info = {
-            'last_act': None, 'lastInformedPrimKeyVal': None, 'lastRequestSlot': None}
         self.user_acts = []
         self.slots_informed = set()
         self.slots_requested = set()
@@ -90,13 +91,20 @@ class RecipeNLU(Service):
         for bye in ('bye', 'goodbye', 'byebye', 'seeyou'):
             if user_utterance.replace(' ', '').endswith(bye):
                 self.user_acts.append(UserAct(user_utterance, UserActionType.Bye))
+        
+        if (self.policy_state_view is not None 
+        and self.policy_state_view.last_sys_act() == SysActionType.Select 
+        and re.match("(no ?)?(thanks|thank you)?", user_utterance.strip(), flags=re.I)):
+            self.user_acts.append(UserAct(user_utterance, UserActionType.Bye))
+
 
         # request a random recipe
-        if re.search("(\\b|^| )random (recipe|meal|food).*", user_utterance, flags=re.I):
+        if (re.search("(\\b|^| )random (recipe|meal|food).*", user_utterance, flags=re.I)
+            or re.search("(\\b|^| )(tell|suggest)( me)? (a|some) (recipe|meal|food)$", user_utterance, flags=re.I)):
             self.user_acts.append(UserAct(user_utterance, UserActionType.RequestRandom))
 
         # start over (useful for debugging)
-        if re.search("(\\b|^| )start (over|from the beginning).*", user_utterance, flags=re.I):
+        if re.search("(\\b|^| )(start (over|from the beginning)|restart)$", user_utterance, flags=re.I):
             self.user_acts.append(UserAct(user_utterance, UserActionType.StartOver))
 
         # save as favorite
@@ -105,16 +113,14 @@ class RecipeNLU(Service):
             self.user_acts.append(UserAct(user_utterance, UserActionType.SaveAsFav))
 
         # list favorites
-        if re.search("(\\b|^| )(list my favorite|what are my favorite)", user_utterance, flags=re.I):
+        if re.search("(\\b|^| )((list|show)( me)? my favorite|what are my favorite)", user_utterance, flags=re.I):
             self.user_acts.append(UserAct(user_utterance, UserActionType.ListFavs))
+
 
         # If nothing else has been matched, see if the user chose a domain; otherwise if it's
         # not the first turn, it's a bad act
         if len(self.user_acts) == 0:
-            if self.domain.get_keyword() in user_utterance:
-                self.user_acts.append(UserAct(text=user_utterance if user_utterance else "",
-                                              act_type=UserActionType.SelectDomain))
-            elif self.sys_act_info['last_act'] is not None:
+            if self.policy_state_view is not None and self.policy_state_view.last_sys_act() is not None:
                 # start of dialogue or no regex matched
                 self.user_acts.append(UserAct(text=user_utterance if user_utterance else "",
                                               act_type=UserActionType.Bad))
@@ -124,14 +130,10 @@ class RecipeNLU(Service):
 
         return result
 
-    @PublishSubscribe(sub_topics=["sys_state"])
-    def _update_sys_act_info(self, sys_state):
-        if "lastInformedPrimKeyVal" in sys_state:
-            self.sys_act_info['last_offer'] = sys_state['lastInformedPrimKeyVal']
-        if "lastRequestSlot" in sys_state:
-            self.sys_act_info['last_request'] = sys_state['lastRequestSlot']
-        if "last_act" in sys_state:
-            self.sys_act_info['last_act'] = sys_state['last_act']
+    @PublishSubscribe(sub_topics=["policy_state"])
+    def _update_policy_state(self, policy_state: PolicyStateView):
+
+        self.policy_state_view = policy_state
 
     def _match_general_act(self, user_utterance: str):
         """
@@ -149,66 +151,14 @@ class RecipeNLU(Service):
             # Check if the regular expression and the user utterance match
             if re.search(self.general_regex[act], user_utterance, re.I):
                 # Mapping the act to User Act
+                print(f"matched: {act}")
                 if act != 'dontcare' and act != 'req_everything':
                     user_act_type = UserActionType(act)
                 else:
                     user_act_type = act
-                # Check if the found user act is affirm or deny
-                if self.sys_act_info['last_act'] and (user_act_type == UserActionType.Affirm or
-                                                      user_act_type == UserActionType.Deny):
-                    # Conditions to check the history in order to assign affirm or deny
-                    # slots mentioned in the previous system act
-
-                    # Check if the preceeding system act was confirm
-                    if self.sys_act_info['last_act'].type == SysActionType.Confirm:
-                        # Iterate over all slots in the system confimation
-                        # and make a list of Affirm/Deny(slot=value)
-                        # where value is taken from the previous sys act
-                        for slot in self.sys_act_info['last_act'].slot_values:
-                            # New user act -- Affirm/Deny(slot=value)
-                            user_act = UserAct(act_type=UserActionType(act),
-                                               text=user_utterance,
-                                               slot=slot,
-                                               value=self.sys_act_info['last_act'].slot_values[slot])
-                            self.user_acts.append(user_act)
-
-                    # Check if the preceeding system act was request
-                    # This covers the binary requests, e.g. 'Is the course related to Math?'
-                    elif self.sys_act_info['last_act'].type == SysActionType.Request:
-                        # Iterate over all slots in the system request
-                        # and make a list of Inform(slot={True|False})
-                        for slot in self.sys_act_info['last_act'].slot_values:
-                            # Assign value for the slot mapping from Affirm or Request to Logical,
-                            # True if user affirms, False if user denies
-                            value = 'true' if user_act_type == UserActionType.Affirm else 'false'
-                            # Adding user inform act
-                            self._add_inform(user_utterance, slot, value)
-
-                    # Check if Deny happens after System Request more, then trigger bye
-                    elif self.sys_act_info['last_act'].type == SysActionType.RequestMore \
-                            and user_act_type == UserActionType.Deny:
-                        user_act = UserAct(text=user_utterance, act_type=UserActionType.Bye)
-                        self.user_acts.append(user_act)
-
-                # Check if Request or Select is the previous system act
-                elif user_act_type == 'dontcare':
-                    if self.sys_act_info['last_act'].type == SysActionType.Request or \
-                            self.sys_act_info['last_act'].type == SysActionType.Select:
-                        # Iteration over all slots mentioned in the last system act
-                        for slot in self.sys_act_info['last_act'].slot_values:
-                            # Adding user inform act
-                            self._add_inform(user_utterance, slot, value=user_act_type)
-
-                # Check if the user wants to get all information about a particular entity
-                elif user_act_type == 'req_everything':
-                    self.req_everything = True
-
-                else:
-                    # This section covers all general user acts that do not depend on
-                    # the dialog history
-                    # New user act -- UserAct()
-                    user_act = UserAct(act_type=user_act_type, text=user_utterance)
-                    self.user_acts.append(user_act)
+               
+                user_act = UserAct(act_type=user_act_type, text=user_utterance)
+                self.user_acts.append(user_act)
 
     def _match_domain_specific_act(self, user_utterance: str):
         """
@@ -360,27 +310,6 @@ class RecipeNLU(Service):
             self.user_acts[i].score = 1.0
 
 
-    def _disambiguate_co_occurrence(self, beliefstate: BeliefState):
-        # Check if there is user inform and request occur simultaneously for a binary slot
-        # E.g. request(applied_nlp) & inform(applied_nlp=true)
-        # Difficult to disambiguate using regexes
-        if self.slots_requested.intersection(self.slots_informed):
-            if beliefstate is None:
-                act_to_del = UserActionType.Request
-            elif self.sys_act_info['lastInformedPrimKeyVal'] in [None, '**NONE**', 'none']:
-                act_to_del = UserActionType.Request
-            else:
-                act_to_del = UserActionType.Inform
-
-            acts_to_del = []
-            for slot in self.slots_requested.intersection(self.slots_informed):
-                for i, user_act in enumerate(self.user_acts):
-                    if user_act.type == act_to_del and user_act.slot == slot:
-                        acts_to_del.append(i)
-
-            self.user_acts = [user_act for i, user_act in enumerate(self.user_acts)
-                              if i not in acts_to_del]
-
     def _solve_informable_values(self):
         # Verify if two or more informable slots with the same value were caught
         # Cases:
@@ -413,3 +342,10 @@ class RecipeNLU(Service):
                                             + 'RequestRules.json'))
         self.inform_regex = json.load(open(self.base_folder + '/' + self.domain_name
                                             + 'InformRules.json'))
+
+        # construct a special rule for unknown ingredients
+        (dummy_ing, reg)    = list(self.inform_regex['ingredients'].items())[0]
+        unk_re              = reg.replace(dummy_ing, "[^ ]+")
+        self.inform_regex['ingredients'][UNK_ING] = unk_re
+        
+        self.ingredients = self.domain.get_all_ingredients()

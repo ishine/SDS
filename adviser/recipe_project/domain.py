@@ -17,7 +17,7 @@
 #
 ###############################################################################
 
-from typing import List, Iterable
+from typing import List, Iterable, Set
 from utils.domain.jsonlookupdomain import JSONLookupDomain
 from .models.recipe_req import RecipeReq
 from .models.recipe import Recipe
@@ -59,21 +59,24 @@ class RecipeDomain(JSONLookupDomain):
                                               for key, val in constraints.items())
         return self.query_db(query)
 
-    def find_recipes(self, request: RecipeReq) -> List[Recipe]:
+    def find_recipes(self, request: RecipeReq, partial: bool = False) -> List[Recipe]:
 
         if request.is_empty():
             return []
         q = ""
+        op = "OR" if partial else "AND"
         if len(request.ingredients) > 0:
-            q += "".join(f" AND LOWER(ingredients) LIKE '%{i.lower()}%' " for i in request.ingredients)
+            q += "".join(f" {op} LOWER(ingredients) LIKE '%{i.lower()}%' " for i in request.ingredients)
         if request.ease is not None:
-            q += f" AND lower(ease) in {self._expand_ease(request.ease)} "
+            q += f" {op} lower(ease) in {self._expand_ease(request.ease)} "
         if request.cookbook is not None:
-            q += f" AND lower(cookbook) = '{request.cookbook.lower()}' "
+            q += f" {op} lower(cookbook) = '{request.cookbook.lower()}' "
         if request.name is not None:
-            q += f" AND lower(name) = '{request.name.lower()}' "
+            q += f" {op} lower(name) = '{request.name.lower()}' "
         if request.rating is not None:
-            q += f" AND rating = '{request.rating}' "
+            q += f" {op} rating = '{request.rating}' "
+        if request.prep_time is not None:
+            q += f" {op} CAST(prep_time as INTEGER) <= {request.prep_time} "
 
         if len(q) > 0:
             q = q[4:]
@@ -82,6 +85,7 @@ class RecipeDomain(JSONLookupDomain):
             q = "SELECT * FROM {}".format(self.get_domain_name())
         return [Recipe.from_db(r) for r in self.query_db(q)]
         
+
     def get_random(self) -> Recipe:
 
         q = "SELECT * FROM {} ORDER BY RANDOM() LIMIT 1".format(self.get_domain_name())
@@ -112,21 +116,20 @@ class RecipeDomain(JSONLookupDomain):
             return "('super simple', 'fairly easy', 'average')"
         return f"('{ease}')"
 
+     
+    def get_all_ingredients(self) -> Set[str]:
+        """ Returns a list of all ingredients in the database """
 
+        q           = "SELECT DISTINCT ingredients from {}".format(self.get_domain_name())
+        ingredients = self.query_db(q)
+        res_set     = set()
+        for i in ingredients:
+            for t in i["ingredients"].split(","):
+                t = t.strip()
+                if not t in res_set:
+                    res_set.add(t)
 
-
-    def find_info_about_entity(self, entity_id: str, requested_slots: Iterable):
-        """ Returns the values (stored in the data backend) of the specified slots for the
-            specified entity.
-
-        Args:
-            entity_id (str): primary key value of the entity
-            requested_slots (dict): slot-value mapping of constraints
-        """
-        result = {slot: self.last_results[int(entity_id)-1][slot] for slot in requested_slots}
-        result['artificial_id'] = entity_id
-        return [result]
-
+        return res_set
 
     def get_requestable_slots(self) -> List[str]:
         """ Returns a list of all slots requestable by the user. """

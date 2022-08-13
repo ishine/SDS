@@ -29,6 +29,14 @@ class RecipeReq:
             elif slot == 'rating':
                 req.rating = vk[0]
             
+        
+        # if the recipe name is given, ignore all other slots
+        if req.name is not None:
+            req.ingredients = []
+            req.ease        = None
+            req.rating      = None
+            req.prep_time   = None
+            req.cookbook    = None
 
         return req
 

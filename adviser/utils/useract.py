@@ -34,6 +34,7 @@ class UserActionType(Enum):
     Bye = 'bye'
     Thanks = 'thanks'
     Affirm = 'affirm'
+    Repeat = 'repeat'
     Deny = 'deny'
     RequestAlternatives = 'reqalts'
     Ack = 'ack'

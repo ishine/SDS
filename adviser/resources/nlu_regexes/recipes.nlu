@@ -4,67 +4,64 @@
 # ----------------------
 
 rule inform(ingredients)
-    "I (want|plan|need) to {cook_syn()} {recipe_syn()} (with|having|that includes|that contains|using|that uses) {ingredients}s?"
-    "(can you )?(tell|suggest|give|pick|choose|find|fetch)( me)? {recipe_syn()} (from cookbook )?(with|having|that (has|contains|includes|uses|makes use of)) {ingredients}s?"
-    "Do you have (a recipe|something|a meal) with {ingredients}s?"
-    "Do you have (a recipe|something|a meal) that (includes|uses) {ingredients}s?"
+    "I {mod_syn()} to {cook_syn()} {recipe_syn()} (with|having|that includes|that contains|using|that uses) {ingredients}"
+    "(can you )?{suggest_syn()}( me)? {recipe_syn()} (from cookbook )?(with|having|that (has|contains|includes|uses|makes use of)) {ingredients}"
+    "Do you (have|know( of)?) ((a|some) recipes?|something|a meal) (that (includes|uses|has)|with) {ingredients}"
     "Whats a {recipe_syn()} with {ingredients}s?"
     "For (which|what) {recipe_syn()} can I use {ingredients}s?"
     "(what|which) {recipe_syn()} can I use {ingredients}s? for"
-
-    "(and )?(it|the recipe|the meal) should (also )?(contain|have|use) {ingredients}s?"
-    "^{ingredients}$"
-
+    "(and )?(it|the recipe|the meal) should (also )?(contain|have|use|include) {ingredients}"
 
 rule inform(ease)
-    "(suggest|pick|tell|give|find|fetch)( me)?( some| an?)? {recipe_syn()} (that|which) is {ease}( to make)?"
-    "I want to {cook_syn()} something that is {ease}( to make)?"
-    "I want to cook (a|an) {ease} recipe"
-    "I want to cook a recipe (that|which) is (quite )?{ease}"
-    "Do you have a recipe that is {ease} to make"
-    "I want to cook something {ease}"
+    "{suggest_syn()}( me)?( some| an?)? {recipe_syn()} (that|which) is {ease}"
+    "I {mod_syn()} to {cook_syn()} something that is {ease}( to make)?"
+    "I {mod_syn()} to {cook_syn()} (a|an) {ease} recipe"
+    "I {mod_syn()} to {cook_syn()} a {recipe_syn()} (that|which) is (quite )?{ease}"
+    "Do you have a {recipe_syn()} that is {ease} to {cook_syn()}"
+    "I {mod_syn()} to {cook_syn()} something {ease}"
+    "{mod_syn()} be {ease} to {cook_syn()}"
 
 
 rule inform(cookbook)
-    "I want to cook something from {cookbook}"
-    "(Suggest|Tell|Give) me some recipe from {cookbook}?"
-    "I want to cook a recipe from {cookbook}"
+    "I want to {cook_syn()} something from {cookbook}"
+    "{suggest_syn()} me some {recipe_syn()} from {cookbook}?"
+    "I want to {cook_syn()} a {recipe_syn()} from {cookbook}"
 
 rule inform(notes)
-    "(Suggest|Tell|Give) me a recipe that (has|is) {notes}"
-    "I want to make a recipe that is {notes}"
-    "I want to cook a recipe that is {notes}"
-    "I want to cook a recipe that is similar to {notes}"
-    "I want to cook a recipe that follows {notes}"
+    "(Suggest|Tell|Give) me a {recipe_syn()} (that|which) (has|is) {notes}"
+    "I want to {cook_syn()} a {recipe_syn()} (that|which) is {notes}"
+    "I want to {cook_syn()} a {recipe_syn()} (that|which) is similar to {notes}"
+    "I want to {cook_syn()} a {recipe_syn()} (that|which) follows {notes}"
 
 rule inform(name)
-    "I want to cook {name}"
+    "I want to {cook_syn()} {name}"
     "^{name}$"
-    "Tell me how to cook {name}"
-    "I (shall )?pick {name}"
+    "Tell me how to {cook_syn()} {name}"
+    "I (shall )?(pick|choose) {name}"
+    "I (choose|pick|would like) the {name}"
     "do you have the {recipe_syn()} for {name}"
 
 
 rule inform(prep_time)
-    "I want to cook something (quickly )?in {prep_time} minutes"
-    "(Tell|Suggest|Give) a recipe that can be cooked in {prep_time} minutes"
-    "Do you have recipe to (make|cook )?in {prep_time} minutes"
+    "(Do you have|{suggest_syn()})( a)?{recipe_syn()} to {cook_syn()} in {prep_time} minutes"
+    "I want to {cook_syn()} something (quickly )?in {prep_time} (under )?minutes"
+    "{suggest_syn()} a {recipe_syn()} (that|which) can be (cooked|done|last_made|prepared|finished) in (under )?{prep_time} minutes"
 
 
 rule inform(type)
-    "I want to cook some {type} food"
-    "I want to (cook|make|prepare )?(a )? {type}"
-    "Do you have a recipe for (a )?{type}"
-    "(Suggest|Tell|Give) (me )? a recipe for {type}"
+    "I want to {cook_syn()} some {type} {recipe_syn()}"
+    "I want to {cook_syn()} (a )?{type}"
+    "Do you have a {recipe_syn()} for (a )?{type}"
+    "{suggest_syn()} (me )? a recipe for {type}"
 
 rule inform(rating)
     "I want to cook something rated with {rating} stars"
     "I want to cook something with {rating} star rating"
-    "(Suggest|Tell|Give) (me )? a recipe (with|having) {rating} star rating"
-    "(Suggest|Tell|Give) (me )? a recipe (with|having) {rating} star(s)?"
-    "(Suggest|Tell) (me )?(a )?{rating} star rating recipe"
-    "Do you have a recipe with {rating} stars"
-    "Do you have a {rating} star rated recipe"
+    "{suggest_syn()} (me )? a {recipe_syn()} (with|having) {rating} star rating"
+    "{suggest_syn()} (me )? a {recipe_syn()} (with|having) {rating} star(s)?"
+    "{suggest_syn()} (me )?(a )?{rating} star rating {recipe_syn()}"
+    "Do you have a {recipe_syn()} with {rating} stars"
+    "Do you have a {rating} star rated {recipe_syn()}"
 
     
 
@@ -82,10 +79,10 @@ rule request(name)
     "what's (the|its) name"
 
 rule request(prep_time)
-    "what is the (prep(aration)?|cooking) time of this recipe" 
-    "what's the (prep(aration)?|cooking) time of this recipe" 
-    "how (long|much time|many minutes) does it take to {cook_syn()}"
-    "is this recipe (quick|fast|slow) to {cook_syn()}"
+    "what is the (prep(aration)?|cooking) time of this {recipe_syn()}" 
+    "what's the (prep(aration)?|cooking) time of this {recipe_syn()}" 
+    "how (long|much time|many minutes) ((does|will|would) )?(it|(that|this)( {recipe_syn()})?) take"
+    "is (this|that) {recipe_syn()} (quick|fast|slow) to {cook_syn()}"
 
 rule request(cookbook)
     "(from )?(which|what) (cook ?)?book is ((this|that|the) {recipe_syn()}|it) (from|in)"
@@ -134,6 +131,24 @@ rule request(make_it_next)
 
 
 # synonyms
+
+function mod_syn()
+    "want"
+    "plan"
+    "need"
+    "have"
+    "should"
+
+function suggest_syn()
+    "suggest"
+    "search"
+    "give"
+    "show"
+    "tell"
+    "find"
+    "look for"
+    "fetch"
+
 
 function cook_syn()
     "prepare"

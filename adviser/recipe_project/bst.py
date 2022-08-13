@@ -25,6 +25,8 @@ from services.service import Service
 from utils.beliefstate import BeliefState
 from utils.useract import UserActionType, UserAct
 from .models.recipe_req import RecipeReq
+from .policy import PolicyState, PolicyStateView
+from .nlu import UNK_ING
 
 
 class RecipeBST(Service):
@@ -34,10 +36,17 @@ class RecipeBST(Service):
 
     def __init__(self, domain=None, logger=None):
         Service.__init__(self, domain=domain)
-        self.logger = logger
-        self.bs = BeliefState(domain)
+
+        self.logger                             = logger
+        self.bs                                 = BeliefState(domain)
+        self.state : Optional[PolicyStateView]  = None
 
     
+    @PublishSubscribe(sub_topics=["policy_state"], pub_topics=[])
+    def policy_state_changed(self, policy_state: PolicyStateView = None):
+        self.logger.error(f"Updating state to {policy_state.current()}")
+        self.state = policy_state
+
 
 
     @PublishSubscribe(sub_topics=["user_acts"], pub_topics=["beliefstate"])
@@ -115,8 +124,8 @@ class RecipeBST(Service):
 
         slots = {act.slot for act in acts if act.type == UserActionType.Inform}
         for slot in [s for s in self.bs['informs']]:
-            # special case: ingredients should not be replaced
-            if slot == "ingredients":
+            # special case: ingredients should not be replaced unless a recipe has already been chosen
+            if slot == "ingredients" and self.state != PolicyState.CHOSEN:
                 continue
             if slot in slots:
                 del self.bs['informs'][slot]
@@ -158,12 +167,18 @@ class RecipeBST(Service):
                 and UserActionType.Inform in self.bs["user_acts"]:
             del self.bs['informs'][self.domain.get_primary_key()]
 
-        num_matches = self.bs['num_matches']
+        num_matches                     = self.bs['num_matches']
+        self.bs['unknown_ingredient']   = False
+
         # Handle user acts
         for act in user_acts:
             if act.type == UserActionType.Request:
                 self.bs['requests'][act.slot] = act.score
             elif act.type == UserActionType.Inform or act.type == UserActionType.InformAdd:
+                if act.slot == 'ingredients' and act.value == UNK_ING:
+                    self.bs['unknown_ingredient'] = len([ua for ua in user_acts if ua.type == UserActionType.Inform and ua.slot == 'ingredients']) == 1
+                    self.logger.error(f"bs.unknown_ingredient = {self.bs['unknown_ingredient']}")
+                    continue
                 # add informs and their scores to the beliefstate
                 if act.slot in self.bs["informs"]:
                     self.bs['informs'][act.slot][act.value] = act.score
@@ -179,7 +194,7 @@ class RecipeBST(Service):
             elif act.type == UserActionType.PickSecond and num_matches > 0 and num_matches < 5:
                 self.bs['chosen'] = self.matching()[1]
             elif act.type == UserActionType.PickLast and num_matches > 0 and num_matches < 5:
-                self.bs['chosen'] = self.matching()[:-1]
+                self.bs['chosen'] = self.matching()[-1]
             elif act.type == UserActionType.Affirm and num_matches == 1:
                 self.bs['chosen'] = self.matching()[0]
 

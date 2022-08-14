@@ -67,7 +67,7 @@
 3. Then give me a recipe that has a good rating.
 4. A lot of recipes are fitting your request. Can you give me some more information?
 5. No, just choose one.
-6. How about Brioche Chocolate rolls?
+6. How about "Chocolate Mousse"?
 7. Okay, can you save this as a favorite?
 8. I set the recipe as a favorite.
 9. Can you list my favorites again?

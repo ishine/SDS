@@ -7,24 +7,26 @@ rule inform(ingredients)
     "I {mod_syn()} to {cook_syn()} {recipe_syn()} (with|having|that includes|that contains|using|that uses) {ingredients}"
     "(can you )?{suggest_syn()}( me)? {recipe_syn()} (from cookbook )?(with|having|that (has|contains|includes|uses|makes use of)) {ingredients}"
     "Do you (have|know( of)?) ((a|some) recipes?|something|a meal) (that (includes|uses|has)|with) {ingredients}"
-    "Whats a {recipe_syn()} with {ingredients}s?"
-    "For (which|what) {recipe_syn()} can I use {ingredients}s?"
+    "Whats a {recipe_syn()} with {ingredients}"
+    "what can i (make out of|cook with|cook using) {ingredients}" 
+    "For (which|what) {recipe_syn()} can I use {ingredients}"
     "(what|which) {recipe_syn()} can I use {ingredients}s? for"
-    "(and )?(it|the recipe|the meal) should (also )?(contain|have|use|include) {ingredients}"
+    "(and )?(it|the recipe|the meal) (should|must) (also )?(contain|have|use|include) {ingredients}"
 
 rule inform(ease)
     "{suggest_syn()}( me)?( some| an?)? {recipe_syn()} (that|which) is {ease}"
-    "I {mod_syn()} to {cook_syn()} something that is {ease}( to make)?"
+    "I {mod_syn()} to {cook_syn()} something (that|which) is {ease}( to make)?"
     "I {mod_syn()} to {cook_syn()} (a|an) {ease} recipe"
     "I {mod_syn()} to {cook_syn()} a {recipe_syn()} (that|which) is (quite )?{ease}"
-    "Do you have a {recipe_syn()} that is {ease} to {cook_syn()}"
+    "Do you have a {recipe_syn()} (that|which) is {ease} to {cook_syn()}"
     "I {mod_syn()} to {cook_syn()} something {ease}"
     "{mod_syn()} be {ease} to {cook_syn()}"
+    "(that|which) is {ease} to {cook_syn()}
 
 
 rule inform(cookbook)
-    "I want to {cook_syn()} something from {cookbook}"
-    "{suggest_syn()} me some {recipe_syn()} from {cookbook}?"
+    "I want to {cook_syn()} {recipe_syn()} from {cookbook}"
+    "{suggest_syn()} me (some|a) {recipe_syn()} from {cookbook}?"
     "I want to {cook_syn()} a {recipe_syn()} from {cookbook}"
 
 rule inform(notes)
@@ -36,10 +38,10 @@ rule inform(notes)
 rule inform(name)
     "I want to {cook_syn()} {name}"
     "^{name}$"
-    "Tell me how to {cook_syn()} {name}"
-    "I (shall )?(pick|choose) {name}"
-    "I (choose|pick|would like) the {name}"
-    "do you have the {recipe_syn()} for {name}"
+    "(Tell|give|show) me how to {cook_syn()} {name}"
+    "(Tell|give|show) me the recipe for {name}"
+    "I (shall )?(pick|choose|would like|take)( the)? {name}"
+    "do you have (the|a) {recipe_syn()} for {name}"
 
 
 rule inform(prep_time)
@@ -49,19 +51,19 @@ rule inform(prep_time)
 
 
 rule inform(type)
-    "I want to {cook_syn()} some {type} {recipe_syn()}"
-    "I want to {cook_syn()} (a )?{type}"
+    "I {mod_syn()} to {cook_syn()} some {type} {recipe_syn()}"
+    "I {mod_syn()} to {cook_syn()} (a )?{type}"
     "Do you have a {recipe_syn()} for (a )?{type}"
     "{suggest_syn()} (me )? a recipe for {type}"
 
 rule inform(rating)
-    "I want to cook something rated with {rating} stars"
-    "I want to cook something with {rating} star rating"
+    "I {mod_syn()} to cook something rated with {rating} stars"
+    "I {mod_syn()} to cook something with {rating} star rating"
     "{suggest_syn()} (me )? a {recipe_syn()} (with|having) {rating} star rating"
     "{suggest_syn()} (me )? a {recipe_syn()} (with|having) {rating} star(s)?"
     "{suggest_syn()} (me )?(a )?{rating} star rating {recipe_syn()}"
-    "Do you have a {recipe_syn()} with {rating} stars"
-    "Do you have a {rating} star rated {recipe_syn()}"
+    "you (have|know) a {recipe_syn()} with {rating} stars"
+    "you (have|know) a {rating} star rated {recipe_syn()}"
 
     
 
@@ -118,15 +120,6 @@ rule request(type)
     "is (this|that|it) a (dinner|breakfast|lunch) dish"
     "is (this|that|it) suitable for (dinner|breakfast|lunch)"
     "is this a (dinner|breakfast|lunch) dish"
-
-
-rule request(notes)
-    "do I have any notes on that {recipe_syn()}"
-
-rule request(make_it_next)
-    "did I mark this as make it next"
-
-
 
 
 

@@ -21,7 +21,7 @@ rule inform(ease)
     "Do you have a {recipe_syn()} (that|which) is {ease} to {cook_syn()}"
     "I {mod_syn()} to {cook_syn()} something {ease}"
     "{mod_syn()} be {ease} to {cook_syn()}"
-    "(that|which) is {ease} to {cook_syn()}
+    "(that|which) is {ease} to {cook_syn()}"
 
 
 rule inform(cookbook)
@@ -88,8 +88,8 @@ rule request(prep_time)
 
 rule request(cookbook)
     "(from )?(which|what) (cook ?)?book is ((this|that|the) {recipe_syn()}|it) (from|in)"
-    "where can i find ((this|that|the) {recipe_syn()}|it)"
-    "in which (cook ?)?book can i find ((this|that|the) {recipe_syn()}|it)"
+    "where can i find ((this|that|the) {recipe_syn()}|it|this|that)"
+    "in which (cook ?)?book can i find ((this|that|the) {recipe_syn()}|it|this|that)"
 
 rule request(page)
     "on (which|what) page of the (cook ?)?book is this {recipe_syn()}"

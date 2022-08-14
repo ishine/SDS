@@ -288,14 +288,11 @@
         "rating",
         "ease",
         "name",
-        "notes",
         "type",
         "prep_time",
         "cookbook",
         "page",
-        "ingredients",
-        "last_made",
-        "make_it_next"
+        "ingredients"
     ],
     "system_requestable": [
         "rating",

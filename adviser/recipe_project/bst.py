@@ -17,9 +17,7 @@
 #
 ###############################################################################
 
-from typing import List, Set
-from .models.recipe import Recipe
-
+from typing import List, Set, Optional
 from services.service import PublishSubscribe
 from services.service import Service
 from utils.beliefstate import BeliefState
@@ -187,6 +185,8 @@ class RecipeBST(Service):
                 if act.slot == 'name' and self.cnt_matching() == 1:
                     self.bs['chosen'] = self.matching()[0]
 
+            elif act.type == UserActionType.Deny and self.state.current() == PolicyState.LISTED_RAND:
+                self.bs['chosen'] = self.domain.get_random()
             elif act.type == UserActionType.RequestRandom:
                 self.bs['chosen'] = self.domain.get_random()
             elif act.type == UserActionType.PickFirst and num_matches > 0 and num_matches < 5:

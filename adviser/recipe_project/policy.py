@@ -137,6 +137,8 @@ class RecipePolicy(Service):
 
         if ua == UserActionType.RequestRandom:
             return self._suggest_one(bs['chosen'])
+        if ua == UserActionType.Deny and self.state.current() == PolicyState.LISTED_RAND:
+            return self._suggest_one(bs['chosen'])
 
         if ua == UserActionType.ListFavs:
             favs = self.domain.get_users_favs()
@@ -156,6 +158,8 @@ class RecipePolicy(Service):
             
 
             return self.answer(st, SysActionType.Inform, slot_values={'message': m})
+
+
 
         # save as favorite 
         if ua == UserActionType.SaveAsFav:
@@ -209,7 +213,8 @@ class RecipePolicy(Service):
                 return self._narrowed_down_to_one(found[0])
             return self._found_some(found)
             
-
+        if ua == UserActionType.Deny and self.state.current() == PolicyState.ASKED_FOR_PART:
+            return self.answer(PolicyState.START, SysActionType.StartOver)
 
         if ua == UserActionType.Inform:
 
@@ -337,13 +342,14 @@ class RecipePolicy(Service):
     def _inform_rating(self, rating: Optional[str] = None) -> str:
         if rating is None:
             return random.choice([
-                "I haven't stored any preparation time for this recipe, sorry.",
+                "I haven't stored any rating for this recipe, sorry.",
                 "I do not have that information, sorry."
             ])
         return random.choice([
-                "This recipe takes {} minutes to prepare.",
-                "It takes about {} minutes."
-        ]).format(time)
+                "This recipe is rated with {} stars.", 
+                "It has {} stars."
+        ]).format(rating)
+
     def _inform_ingredients(self, ingredients: str) -> str:
         spl = ingredients.split(',')
         if len(spl) == 2:

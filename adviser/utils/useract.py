@@ -49,6 +49,8 @@ class UserActionType(Enum):
     PickLast = "picklast"
     # user is presented exactly one recipe, and confirms that is is the right one
     Pick = "pick"
+    # user is presented a list of options, and lets the system pick
+    PickRandom = "pickrandom"
     # user wants a random recipe
     RequestRandom = 'request_random'
     # start over

@@ -61,6 +61,10 @@ class BotStateView:
 
         self.sys_act_history.append(new_sys_act)
     
+    def matches(self, state: BotState) -> bool:
+        """ Check if the current bot state matches the given state. """
+        return self.current_state == state
+    
     def current(self) -> BotState:
         """ Get the current bot state. """
         return self.current_state
@@ -125,12 +129,15 @@ class RecipePolicy(Service):
 
         ua              = list(user_acts)[0]
 
-        self.debug_logger.error(f"[policy] UAs={user_acts}")
+        self.debug_logger.info(f"[policy] UAs={user_acts}")
         if ua == UserActionType.Hello:
             return self.answer(None, SysActionType.Welcome)
 
-        if ua == UserActionType.Thanks:
+        if ua == UserActionType.Thanks and self.state.last_sys_act() != SysActionType.RequestMore:
             return self.answer(BotState.START, SysActionType.RequestMore)
+
+        if ua in (UserActionType.Deny, UserActionType.Thanks) and self.state.last_sys_act() == SysActionType.RequestMore:
+            return self.answer(BotState.START, SysActionType.Bye)
 
         if ua == UserActionType.Bye:
             return self.answer(BotState.START, SysActionType.Bye)
@@ -146,12 +153,14 @@ class RecipePolicy(Service):
             return self.answer(BotState.CHOSEN, SysActionType.Select)
         if ua == UserActionType.PickLast and num_matches > 0 and num_matches < 5:
             return self.answer(BotState.CHOSEN, SysActionType.Select)
+        if ua == UserActionType.PickRandom:
+            return self._suggest_one(bs['chosen'])
         if ua == UserActionType.Affirm and self._has_chosen(bs):
             return self.answer(BotState.CHOSEN, SysActionType.Select)
 
         if ua == UserActionType.RequestRandom:
             return self._suggest_one(bs['chosen'])
-        if ua == UserActionType.Deny and self.state.current() == BotState.LISTED_RAND:
+        if ua in (UserActionType.Deny, UserActionType.RequestAlternatives) and self.state.current() == BotState.LISTED_RAND:
             return self._suggest_one(bs['chosen'])
 
         if ua == UserActionType.ListFavs:
@@ -162,10 +171,10 @@ class RecipePolicy(Service):
                 m = "You have not set any favorites yet."
             elif len(favs) == 1:
                 st  = BotState.LISTED_FAV
-                m   = f"Your only favorite recipe is {favs[0]}."
+                m   = f"Your only favorite recipe is \"{favs[0].name}\"."
             elif len(favs) == 2:
                 st  = BotState.LISTED_FAV
-                m   = f"Your have set 2 recipes as favorites, {favs[0]} and {favs[1]}."
+                m   = f"Your have set 2 recipes as favorites, {favs[0].name} and {favs[1].name}."
             else:
                 st  = BotState.LISTED_FAV
                 m   = "Your favorites are: " + ", ".join([r.name for r in favs]) + "."
@@ -175,16 +184,16 @@ class RecipePolicy(Service):
 
         # save as favorite 
         if ua == UserActionType.SaveAsFav:
-            if not self.state.current() == BotState.CHOSEN:
+            if not self._has_chosen(bs):
                 return self.answer(BotState.CHOSEN, SysActionType.NotYetChosen)
 
-            self.domain.set_favorite(self.bs['chosen'].name)
+            self.domain.set_favorite(bs['chosen'].name)
             return self.answer(BotState.CHOSEN, SysActionType.Inform, slot_values={'message': "I set the recipe as a favorite."})
         # remove from favorites 
         if ua == UserActionType.RemoveFromFavs:
             if not self.state.current() == BotState.CHOSEN:
                 return self.answer(None, SysActionType.NotYetChosen)
-            self.domain.unset_favorite(self.bs['chosen'].name)
+            self.domain.unset_favorite(bs['chosen'].name)
             return self.answer(None, SysActionType.Inform, slot_values={'message': "I removed the recipe from your favorites."})
         
         if ua == UserActionType.Request:
@@ -298,7 +307,8 @@ class RecipePolicy(Service):
         return self.answer(BotState.LISTED_FOUND, SysActionType.NarrowedDownToOne, slot_values={'name': recipe.name})
 
     def _suggest_one(self, recipe: Recipe) -> dict:
-
+        if self.state.matches(BotState.LISTED_RAND):
+            return self.answer(BotState.LISTED_RAND, SysActionType.Inform, slot_values={'message': f"How about {recipe.name} then?"})
         return self.answer(BotState.LISTED_RAND, SysActionType.Inform, slot_values={'message': f"How about {recipe.name}?"})
 
 

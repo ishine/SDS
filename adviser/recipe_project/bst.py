@@ -26,6 +26,7 @@ from .models.recipe_req import RecipeReq
 from .models.recipe import Recipe
 from .policy import BotState, BotStateView
 from .nlu import UNK_ING
+import random
 
 
 class RecipeBST(Service):
@@ -38,7 +39,7 @@ class RecipeBST(Service):
 
         self.logger                             = logger
         self.bs                                 = BeliefState(domain)
-        self.state : Optional[BotStateView]  = None
+        self.state : Optional[BotStateView]     = None
 
     
     @PublishSubscribe(sub_topics=["bot_state"], pub_topics=[])
@@ -172,7 +173,7 @@ class RecipeBST(Service):
                 self.bs['requests'][act.slot] = act.score
             elif act.type == UserActionType.Inform or act.type == UserActionType.InformAdd:
                 if act.slot == 'ingredients' and act.value == UNK_ING:
-                    self.bs['unknown_ingredient'] = len([ua for ua in user_acts if ua.type == UserActionType.Inform and ua.slot == 'ingredients']) == 1
+                    self.bs['unknown_ingredient'] = len([ua for ua in user_acts if ua.type == UserActionType.Inform]) == 1
                     self.logger.error(f"bs.unknown_ingredient = {self.bs['unknown_ingredient']}")
                     continue
                 # add informs and their scores to the beliefstate
@@ -183,7 +184,7 @@ class RecipeBST(Service):
                 if act.slot == 'name' and self.cnt_matching() == 1:
                     self.bs['chosen'] = self.matching()[0]
 
-            elif act.type == UserActionType.Deny and self.state.current() == BotState.LISTED_RAND:
+            elif act.type in (UserActionType.Deny, UserActionType.RequestAlternatives) and self.state.current() == BotState.LISTED_RAND:
                 self.bs['chosen'] = self.domain.get_random()
             elif act.type == UserActionType.RequestRandom:
                 self.bs['chosen'] = self.domain.get_random()
@@ -193,6 +194,8 @@ class RecipeBST(Service):
                 self.bs['chosen'] = self.matching()[1]
             elif act.type == UserActionType.PickLast and num_matches > 0 and num_matches < 5:
                 self.bs['chosen'] = self.matching()[-1]
+            elif act.type == UserActionType.PickRandom and num_matches > 0:
+                self.bs['chosen'] = random.choice(self.matching())
             elif act.type == UserActionType.Affirm and num_matches == 1:
                 self.bs['chosen'] = self.matching()[0]
 

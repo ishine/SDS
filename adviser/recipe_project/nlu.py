@@ -108,9 +108,13 @@ class RecipeNLU(Service):
             self.user_acts.append(UserAct(user_utterance, UserActionType.StartOver))
 
         # Case: user wants to save chosen recipe as favorite
-        if re.search("(\\b|^| )((can you( please)?|please )?(save|mark) (this|that|it)( recipe|food|meal)? (as( a)? favorite|to my favorites)"
+        if re.search("(\\b|^| )((can you( please)?|please )?(save|mark|add) (this|that|it)( recipe|food|meal)? (as( a)? favorite|to my favorites)"
             "|save to favorites?)", user_utterance, flags=re.I):
             self.user_acts.append(UserAct(user_utterance, UserActionType.SaveAsFav))
+
+        # Case: user wants to delete recipe from favorites
+        if re.search("(\\b|^| )(can you( please)?|please )?(delete|remove) ([^ ]+ ){1,5}from( my| the)? favorites", user_utterance, flags=re.I):
+            self.user_acts.append(UserAct(user_utterance, UserActionType.RemoveFromFavs))
 
         # Case: user wants to have listed all favorites
         if re.search("(\\b|^| )((list|show)( me)? my favorite|what are my favorite)", user_utterance, flags=re.I):

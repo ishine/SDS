@@ -127,6 +127,7 @@ class RecipePolicy(Service):
         if user_acts is None or len(user_acts) == 0:
             return self.answer(None, SysActionType.Welcome)
 
+        input_raw       = bs['input']
         ua              = list(user_acts)[0]
 
         self.debug_logger.info(f"[policy] UAs={user_acts}")
@@ -191,6 +192,12 @@ class RecipePolicy(Service):
             return self.answer(BotState.CHOSEN, SysActionType.Inform, slot_values={'message': "I set the recipe as a favorite."})
         # remove from favorites 
         if ua == UserActionType.RemoveFromFavs:
+            recipe_names = self.domain.get_all_recipe_names()
+            inp_lower    = input_raw.lower()
+            for rname in recipe_names:
+                if rname.lower() in inp_lower:
+                    self.domain.unset_favorite(rname)
+                    return self.answer(None, SysActionType.Inform, slot_values={'message': f"I removed \"{rname}\" from your favorites."})
             if not self.state.current() == BotState.CHOSEN:
                 return self.answer(None, SysActionType.NotYetChosen)
             self.domain.unset_favorite(bs['chosen'].name)

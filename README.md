@@ -1,15 +1,35 @@
 ### Recipe Bot for Spoken Dialogue Systems (Summer 2022)
 
+This is a bot that, in combination with a database, can be used to
+
+- get suggestions for recipes 
+    - in accordance with some given constraints (ease, preparation time, ingredients)
+    - random
+- manage a list of favorite recipes
+- ask for information about recipes (ingredients, ease, preparation time, cook book (+ page))
+
+#### Requestables
+
++ rating
++ ease
++ name
++ preparation time
++ cookbook
++ page
++ ingredients
+
+
 #### Example dialogues
 
-#### Filtering down by providing ingredients, then asking for information
+##### Filtering down by providing ingredients, then asking for information
 
+``` 
 1. Hi, do you have a recipe with beans?
 2. I found many recipes, maybe you can give me some more information?
 3. It should also include carrots.
 4. I found no exact matches. But there are recipes that satisfy at least some of your constraints. Do you want to hear them?
 5. Yes.
-6. I found $Recipe_1, $Recipe2, ....  Which one do you want?
+6. I found Recipe_1, Thai Squash Soup, Recipe2, ....  Which one do you want?
 7. I take the Thai Squash Soup.
 8. Okay, do you want to know something about this recipe?
 9. How long does it take to prepare?
@@ -20,8 +40,10 @@
 14. Can I help you with anything else?
 15. No, thanks.
 16. Always glad to help.
+``` 
 
-##### Random, deny, accept
+##### Ask for random recipe, deny first suggestion, accept second suggestion
+``` 
 1. Hi, please just give me a random recipe.
 2. How about Blondies with Nutella?
 3. Can you give me something different?
@@ -30,8 +52,10 @@
 6. The name of the book is Taste From Home.
 7. Thank you, that is all.
 8. Always glad to help. Bye!
+``` 
 
 ##### Combined query
+``` 
 1. Do you have a recipe that is easy to prepare and takes little time?
 2. I found many recipes, maybe you can give me some more information?
 3. Just give me one of them, thank you.
@@ -42,8 +66,10 @@
 8. Can I help you with anything else?
 9. Nope
 10. I hope I could be of any help, see you.
+``` 
 
 ##### Save to favorites
+``` 
 1. I want to cook something with potatoes.
 2. I found many recipes, maybe you can give me some more information?
 3. It should be quick to make.
@@ -60,9 +86,11 @@
 14. Your only favorite recipe is "Potato and Corn Chowder".
 15. Thank you, that is all.
 16. Thank you, good bye.
+``` 
 
 ##### List favorites
-1. HI, can you list me my favorite recipes?
+``` 
+1. Hi, can you list me my favorite recipes?
 2. You have not set any favorites yet.
 3. Then give me a recipe that has a good rating.
 4. A lot of recipes are fitting your request. Can you give me some more information?
@@ -72,5 +100,6 @@
 8. I set the recipe as a favorite.
 9. Can you list my favorites again?
 10. Your only favorite recipe is "Chocolate Mousse".
-11. Thanks, bye
-12. Good bye
+11. Thanks, bye.
+12. Good bye.
+``` 

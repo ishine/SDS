@@ -91,18 +91,21 @@ Currently, the bots database is loaded into memory, so favorites are not persist
 16. Thank you, good bye.
 ``` 
 
-##### List favorites
+##### List favorites, create one, then remove it again
 ``` 
 1. Hi, can you list me my favorite recipes?
 2. You have not set any favorites yet.
 3. Then give me a recipe that has a good rating.
 4. A lot of recipes are fitting your request. Can you give me some more information?
 5. No, just choose one.
-6. How about "Chocolate Mousse"?
+6. How about Chocolate Mousse?
 7. Okay, can you save this as a favorite?
 8. I set the recipe as a favorite.
-9. Can you list my favorites again?
+9. Can you list my favorites?
 10. Your only favorite recipe is "Chocolate Mousse".
-11. Thanks, bye.
-12. Good bye.
+11. Can you delete "Chocolate Mousse" from my favorites?
+12. I removed "Chocolate Mousse" from your favorites.
+11. Thanks, bye
+12. Good bye
+
 ``` 

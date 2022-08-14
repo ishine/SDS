@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from utils import UserAct, UserActionType, DiasysLogger, SysAct, SysActionType, BeliefState
 from services.service import Service, PublishSubscribe
-from .policy import BotStateView
+from .policy import BotStateView, BotState
 
 def get_root_dir():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -89,21 +89,26 @@ class RecipeNLU(Service):
         # Case: user selected recipe, denies wanting any more information
         if (self.bot_state_view is not None 
         and self.bot_state_view.last_sys_act() == SysActionType.Select 
-        and re.match("(no ?)?(thanks|thank you)?", user_utterance.strip(), flags=re.I)):
+        and re.match("(no ?)?(thanks|thank you)", user_utterance.strip(), flags=re.I)):
             self.user_acts.append(UserAct(user_utterance, UserActionType.Bye))
-
 
         # Case: user requests a random recipe
         if (re.search("(\\b|^| )random (recipe|meal|food).*", user_utterance, flags=re.I)
             or re.search("(\\b|^| )(tell|suggest)( me)? (a|some) (recipe|meal|food)$", user_utterance, flags=re.I)):
             self.user_acts.append(UserAct(user_utterance, UserActionType.RequestRandom))
 
+        # Case: user just wants one of the found recipes
+        if (self.bot_state_view is not None and self.bot_state_view.matches(BotState.LISTED_FOUND) and 
+            (re.search("(\\b|^| )(give|pick|choose|tell)( me)?(a random one| one( of (them|th[eo]se))?)(,? thanks?( you)?)?[.!]?$", user_utterance, flags=re.I)
+            or re.search("(\\b|^| )(pick|choose) one( of (these|them)| for me)", user_utterance, flags=re.I))):
+            self.user_acts.append(UserAct(user_utterance, UserActionType.PickRandom))
+
         # Case: start over (useful for debugging or if the bot reaches a dead-end)
         if re.search("(\\b|^| )(start (over|from the beginning)|restart)$", user_utterance, flags=re.I):
             self.user_acts.append(UserAct(user_utterance, UserActionType.StartOver))
 
         # Case: user wants to save chosen recipe as favorite
-        if re.search("(\\b|^| )((can you( please)?|please )?(save|mark) (this|that)( recipe|food|meal)? (as a favorite|to my favorites)"
+        if re.search("(\\b|^| )((can you( please)?|please )?(save|mark) (this|that|it)( recipe|food|meal)? (as( a)? favorite|to my favorites)"
             "|save to favorites?)", user_utterance, flags=re.I):
             self.user_acts.append(UserAct(user_utterance, UserActionType.SaveAsFav))
 
@@ -157,7 +162,6 @@ class RecipeNLU(Service):
             # Check if the regular expression and the user utterance match
             if re.search(self.general_regex[act], user_utterance, re.I):
                 # Mapping the act to User Act
-                print(f"matched: {act}")
                 if act != 'dontcare' and act != 'req_everything':
                     user_act_type = UserActionType(act)
                 else:
@@ -228,13 +232,6 @@ class RecipeNLU(Service):
         for slot in self.USER_INFORMABLE:
             for value in self.inform_regex[slot]:
                 if self._check(re.search(self.inform_regex[slot][value], user_utterance, re.I)):
-                    if slot == self.domain_key and self.req_everything:
-                        # Adding all requestable slots because of the req_everything
-                        for req_slot in self.USER_REQUESTABLE:
-                            # skipping the domain key slot
-                            if req_slot != self.domain_key:
-                                # Adding user request act
-                                self._add_request(user_utterance, req_slot)
                     # Adding user inform act
                     self._add_inform(user_utterance, slot, value)
         

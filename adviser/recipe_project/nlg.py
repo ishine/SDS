@@ -130,8 +130,8 @@ class RecipeNLG(Service):
                 ["I found many recipes, maybe you can give me some more information?",
                 "A lot of recipes are fitting your request. Can you give me some more information?"])
 
-        rule_found = True
-        message = ""
+        rule_found      = True
+        message         = ""
         try:
             message = self.templates.create_message(sys_act)
         except BaseException as error:

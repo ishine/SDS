@@ -74,7 +74,7 @@ class RecipeDomain(JSONLookupDomain):
         if request.name is not None:
             q += f" {op} lower(name) = '{request.name.lower()}' "
         if request.rating is not None:
-            q += f" {op} rating = '{request.rating}' "
+            q += f" {op} CAST(rating as INTEGER) >= {request.rating} "
         if request.prep_time is not None:
             q += f" {op} CAST(prep_time as INTEGER) <= {request.prep_time} "
 

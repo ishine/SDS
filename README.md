@@ -8,6 +8,8 @@ This is a bot that can be used to
 - manage a list of favorite recipes
 - query for information about a given recipe (ingredients, ease, preparation time, cook book (+ page))
 
+Currently, the bots database is loaded into memory, so favorites are not persisted between sessions!
+
 #### Requestables
 
 + rating
@@ -18,6 +20,7 @@ This is a bot that can be used to
 + page
 + ingredients
 
+---
 
 #### Example dialogues
 

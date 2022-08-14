@@ -42,7 +42,7 @@ class RecipeNLG(Service):
                     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                     'resources/nlg_templates/%sMessages.nlg' % self.domain.get_domain_name())
         
-        self.bot_state_view : Optional[BotStateView]  = None
+        self.bot_state_view : Optional[BotStateView]        = None
         self.templates                                      = TemplateFile(self.template_filename, self.domain)
 
     @PublishSubscribe(sub_topics=["sys_act", "bot_state"], pub_topics=["sys_utterance"])

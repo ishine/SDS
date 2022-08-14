@@ -1,12 +1,12 @@
 ### Recipe Bot for Spoken Dialogue Systems (Summer 2022)
 
-This is a bot that, in combination with a database, can be used to
+This is a bot that can be used to
 
-- get suggestions for recipes 
+- get suggestions for recipes, either
     - in accordance with some given constraints (ease, preparation time, ingredients)
-    - random
+    - or as random suggestions
 - manage a list of favorite recipes
-- ask for information about recipes (ingredients, ease, preparation time, cook book (+ page))
+- query for information about a given recipe (ingredients, ease, preparation time, cook book (+ page))
 
 #### Requestables
 

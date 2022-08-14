@@ -23,6 +23,7 @@ from services.service import Service
 from utils.beliefstate import BeliefState
 from utils.useract import UserActionType, UserAct
 from .models.recipe_req import RecipeReq
+from .models.recipe import Recipe
 from .policy import PolicyState, PolicyStateView
 from .nlu import UNK_ING
 
@@ -42,7 +43,9 @@ class RecipeBST(Service):
     
     @PublishSubscribe(sub_topics=["policy_state"], pub_topics=[])
     def policy_state_changed(self, policy_state: PolicyStateView = None):
-        self.logger.error(f"Updating state to {policy_state.current()}")
+        """ Listen to new state from Policy. """
+
+        self.logger.info(f"Updating state to {policy_state.current()}")
         self.state = policy_state
 
 
@@ -66,11 +69,6 @@ class RecipeBST(Service):
         # save last turn to memory
         self.bs.start_new_turn()
 
-        # # assume one user act for now
-        # ua                              = user_acts[0]
-        # last_ua                         = self.sys_state['last_user_act']
-        # self.sys_state['last_user_act'] = ua
-
         self.logger.error(f"[bst] user_acts = {user_acts}")
         if user_acts:
             self._reset_informs(user_acts)
@@ -80,9 +78,8 @@ class RecipeBST(Service):
             self.bs["num_matches"] = self.cnt_matching()
             self._handle_user_acts(user_acts)
             self.bs["num_matches"] = self.cnt_matching()
+            self.logger.info(f"[bs] after_handle_user_acts({self.bs['informs']})")
 
-            self.logger.error(f"[bs] after_handle_user_acts({self.bs['informs']})")
-            # self.bs["discriminable"] = discriminable
         elif not self.bs['start']:
             self.bs["user_acts"] = [UserActionType.Bad]
 
@@ -101,13 +98,14 @@ class RecipeBST(Service):
         self.bs = BeliefState(self.domain)
         self.bs['start'] = True
 
-    def cnt_matching(self):
-        informs = self.bs['informs']
-        req     = RecipeReq.from_informs(informs)
-        found   = self.domain.find_recipes(req)
-        return len(found)
+    def cnt_matching(self) -> int:
+        """ Returns the number of recipes matching the currently given informs. """
 
-    def matching(self):
+        return len(self.matching())
+
+    def matching(self) -> List[Recipe]:
+        """ Returns all recipes matching the currently given informs. """
+
         informs = self.bs['informs']
         req     = RecipeReq.from_informs(informs)
         found   = self.domain.find_recipes(req)

@@ -1,7 +1,6 @@
 import re
 import json
 import os
-from datetime import datetime, timedelta
 from typing import List, Optional
 
 from utils import UserAct, UserActionType, DiasysLogger, SysAct, SysActionType, BeliefState
@@ -16,27 +15,27 @@ UNK_ING : str        = "UNK_ING"
 class RecipeNLU(Service):
     """NLU for the recipe bot. Code mostly taken from HandcraftedNLU, with some added checks that 
         would not fit well into GeneralRules.json.
-    
     """
 
     def __init__(self, domain, logger=DiasysLogger()):
-        # only calls super class' constructor
         Service.__init__(self, domain=domain)
-        self.logger = logger
-        self.domain_name = domain.get_domain_name()
-        self.domain_key = domain.get_primary_key()
+
+        self.logger                                         = logger
+        self.domain_name                                    = domain.get_domain_name()
+        self.domain_key                                     = domain.get_primary_key()
 
         # Getting lists of informable and requestable slots
-        self.USER_INFORMABLE = domain.get_informable_slots()
-        self.USER_REQUESTABLE = domain.get_requestable_slots()
+        self.USER_INFORMABLE                                = domain.get_informable_slots()
+        self.USER_REQUESTABLE                               = domain.get_requestable_slots()
 
         # Getting the relative path where regexes are stored
-        self.base_folder = os.path.join(get_root_dir(), 'resources', 'nlu_regexes')
+        self.base_folder                                    = os.path.join(get_root_dir(), 'resources', 'nlu_regexes')
 
-        self.policy_state_view : Optional[PolicyStateView] = None
+        # having the current system state available can be helpful in some cases
+        self.policy_state_view : Optional[PolicyStateView]  = None
 
         # Holds a set of all ingredients occurring in the domain db after initialization
-        self.ingredients    = set()
+        self.ingredients                                    = set()
 
         self._initialize()
 
@@ -52,7 +51,6 @@ class RecipeNLU(Service):
         self.user_acts = []
         self.slots_informed = set()
         self.slots_requested = set()
-        self.req_everything = False
 
 
     @PublishSubscribe(sub_topics=["user_utterance"], pub_topics=["user_acts"])
@@ -70,12 +68,8 @@ class RecipeNLU(Service):
             dict of str: UserAct - a dictionary with the key "user_acts" and the value
                                             containing a list of user actions
         """
-        result = {}
-
-        # Setting request everything to False at every turn
-        self.req_everything = False
-
-        self.user_acts = []
+        result              = {}
+        self.user_acts      = []
 
         # slots_requested & slots_informed store slots requested and informed in this turn
         # they are used later for later disambiguation
@@ -92,52 +86,47 @@ class RecipeNLU(Service):
             if user_utterance.replace(' ', '').endswith(bye):
                 self.user_acts.append(UserAct(user_utterance, UserActionType.Bye))
         
+        # Case: user selected recipe, denies wanting any more information
         if (self.policy_state_view is not None 
         and self.policy_state_view.last_sys_act() == SysActionType.Select 
         and re.match("(no ?)?(thanks|thank you)?", user_utterance.strip(), flags=re.I)):
             self.user_acts.append(UserAct(user_utterance, UserActionType.Bye))
 
 
-        # request a random recipe
+        # Case: user requests a random recipe
         if (re.search("(\\b|^| )random (recipe|meal|food).*", user_utterance, flags=re.I)
             or re.search("(\\b|^| )(tell|suggest)( me)? (a|some) (recipe|meal|food)$", user_utterance, flags=re.I)):
             self.user_acts.append(UserAct(user_utterance, UserActionType.RequestRandom))
 
-        # start over (useful for debugging)
+        # Case: start over (useful for debugging or if the bot reaches a dead-end)
         if re.search("(\\b|^| )(start (over|from the beginning)|restart)$", user_utterance, flags=re.I):
             self.user_acts.append(UserAct(user_utterance, UserActionType.StartOver))
 
-        # save as favorite
+        # Case: user wants to save chosen recipe as favorite
         if re.search("(\\b|^| )((can you( please)?|please )?(save|mark) (this|that)( recipe|food|meal)? (as a favorite|to my favorites)"
             "|save to favorites?)", user_utterance, flags=re.I):
             self.user_acts.append(UserAct(user_utterance, UserActionType.SaveAsFav))
 
-        # list favorites
+        # Case: user wants to have listed all favorites
         if re.search("(\\b|^| )((list|show)( me)? my favorite|what are my favorite)", user_utterance, flags=re.I):
             self.user_acts.append(UserAct(user_utterance, UserActionType.ListFavs))
 
-        # rating
+        # Case: user informs about how the recipe should be rated 
         # because the ratings in the database are star-based (1-5), we translate some other utterances to stars
         if re.search("(\\b|^| )(that is (highly|well) rated|(that has|with) a (high|good) rating)", user_utterance, flags=re.I):
             self.user_acts.append(UserAct(user_utterance, UserActionType.Inform, slot="rating", value="4"))
 
-        # preparation time
-        # analogous case to rating
+        # Case: user informs about how long the recipe should be take to prepare
+        # analogous case to rating, prep_time is given in minutes in the database, so we are translating some common utterances
         if re.search("(\\b|^| )(takes little time|(quick|fast|uncomplicated) to (cook|prepare|make|do))", user_utterance, flags=re.I):
             self.user_acts.append(UserAct(user_utterance, UserActionType.Inform, slot="prep_time", value="30"))
-        
-
 
         # If nothing else has been matched, see if the user chose a domain; otherwise if it's
         # not the first turn, it's a bad act
         if len(self.user_acts) == 0:
             if self.policy_state_view is not None and self.policy_state_view.last_sys_act() is not None:
                 # start of dialogue or no regex matched
-                self.user_acts.append(UserAct(text=user_utterance if user_utterance else "",
-                                              act_type=UserActionType.Bad))
-
-
-
+                self.user_acts.append(UserAct(text=user_utterance if user_utterance else "", act_type=UserActionType.Bad))
 
 
         self._assign_scores()
@@ -148,6 +137,7 @@ class RecipeNLU(Service):
 
     @PublishSubscribe(sub_topics=["policy_state"])
     def _update_policy_state(self, policy_state: PolicyStateView):
+        """ Listen to system state changes. """
 
         self.policy_state_view = policy_state
 
@@ -360,8 +350,12 @@ class RecipeNLU(Service):
                                             + 'InformRules.json'))
 
         # construct a special rule for unknown ingredients
+        # 1. take any rule from the ingredients informs
         (dummy_ing, reg)    = list(self.inform_regex['ingredients'].items())[0]
+        # 2. replace the {ingredients} part with a regex matching any word
         unk_re              = reg.replace(dummy_ing, "[^ ]+")
+        # 3. register the new rule for the ingredient UNK_ING
         self.inform_regex['ingredients'][UNK_ING] = unk_re
         
+        # load all ingredients
         self.ingredients = self.domain.get_all_ingredients()

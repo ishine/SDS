@@ -34,32 +34,15 @@ class RecipeDomain(JSONLookupDomain):
         JSONLookupDomain.__init__(self, 'recipes', 'resources/ontologies/recipes.json', 'resources/databases/recipes.db', 'Recipes')
         self.last_results = []
     
-    # we override find_entities to be able to better match ingredients
-    def find_entities(self, constraints: dict, requested_slots: Iterable = iter(())):
-        """ Returns all entities from the data backend that meet the constraints, with values for
-            the primary key and the system requestable slots (and optional slots, specifyable
-            via requested_slots).
-
-        Args:
-            constraints (dict): Slot-value mapping of constraints.
-                                If empty, all entities in the database will be returned.
-            requested_slots (Iterable): list of slots that should be returned in addition to the
-                                        system requestable slots and the primary key
-
-        """
-        # values for name and all system requestable slots
-        select_clause = ", ".join(set([self.get_primary_key()]) |
-                                  set(self.get_system_requestable_slots()) |
-                                  set(requested_slots))
-        query = "SELECT {} FROM {}".format(select_clause, self.get_domain_name())
-        constraints = {slot: value.replace("'", "''") for slot, value in constraints.items()
-                       if value is not None and str(value).lower() != 'dontcare'}
-        if constraints:
-            query += ' WHERE ' + ' AND '.join("{}='{}' COLLATE NOCASE".format(key, str(val)) if key != 'ingredients' else "lower({}) LIKE '%{}%'".format(key, str(val).lower())
-                                              for key, val in constraints.items())
-        return self.query_db(query)
-
+ 
     def find_recipes(self, request: RecipeReq, partial: bool = False) -> List[Recipe]:
+        """ Find recipes matching the given RecipeReq.
+        
+        Args:
+            request: A RecipeReq which represents the currently given informs
+            partial: If True, conditions in the query are linked with OR, so all recipes that at least match one of the given
+                     conditions will be returned
+         """
 
         if request.is_empty():
             return []
@@ -87,6 +70,7 @@ class RecipeDomain(JSONLookupDomain):
         
 
     def get_random(self) -> Recipe:
+        """ Get a random recipe from the database. """
 
         q = "SELECT * FROM {} ORDER BY RANDOM() LIMIT 1".format(self.get_domain_name())
         r = self.query_db(q)
@@ -94,21 +78,30 @@ class RecipeDomain(JSONLookupDomain):
         return Recipe.from_db(r[0])
 
     def get_users_favs(self) -> List[Recipe]:
-        q = "SELECT * FROM {} WHERE favorite = true".format(self.get_domain_name())
+        """ Get all recipes that are marked as favorite, ordered by name ascending. """
+
+        q = "SELECT * FROM {} WHERE favorite = true ORDER BY name ASC".format(self.get_domain_name())
         r = self.query_db(q)
         return [Recipe.from_db(r) for r in self.query_db(q)]
 
     def set_favorite(self, name: str):
+        """ Set the recipe with the given name as favorite. """
+
         q = "UPDATE {} SET favorite = true WHERE name = '{}'".format(self.get_domain_name(), name)
         self.query_db(q)
 
     def unset_favorite(self, name: str):
+        """ Unset the recipe with the given name as favorite. """
+
         q = "UPDATE {} SET favorite = false WHERE name = '{}'".format(self.get_domain_name(), name)
         self.query_db(q)
 
 
 
     def _expand_ease(self, ease: str):
+        """ Ease might be given in forms not occuring in the database. To still get meaningful results, 
+            we interpret "easy" as meaning either "super simple" or "fairly easy".
+         """
 
         if ease.casefold() in ["easy", "simple"]:
             return "('super simple', 'fairly easy')"

@@ -32,24 +32,18 @@ class RecipeNLG(Service):
     """NLG service for our recipe bot"""
 
     def __init__(self, domain, logger=DiasysLogger()):
-        # only calls super class' constructor
+
         super(RecipeNLG, self).__init__(domain, debug_logger=logger)
-        self.domain = domain
-        self.templates = None
-        self.logger = logger
-        self.template_filename = os.path.join(
+
+        self.domain                                         = domain
+        self.templates                                      = None
+        self.logger                                         = logger
+        self.template_filename                              = os.path.join(
                     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                     'resources/nlg_templates/%sMessages.nlg' % self.domain.get_domain_name())
         
-        self.policy_state_view : Optional[PolicyStateView] = None
-        self.templates = TemplateFile(self.template_filename, self.domain)
-
-
-    # @PublishSubscribe(sub_topics=["policy_state"])
-    # def _update_policy_state(self, policy_state: PolicyStateView):
-
-    #     self.policy_state_view = policy_state
-
+        self.policy_state_view : Optional[PolicyStateView]  = None
+        self.templates                                      = TemplateFile(self.template_filename, self.domain)
 
     @PublishSubscribe(sub_topics=["sys_act", "policy_state"], pub_topics=["sys_utterance"])
     def publish_system_utterance(self, sys_act: SysAct = None, policy_state: PolicyStateView = None) -> dict(sys_utterance=str):
@@ -57,6 +51,7 @@ class RecipeNLG(Service):
 
         Args:
             sys_act (SysAct): The system act published by the policy
+            policy_state (SysAct): Represents the systems state 
 
         Returns:
             dict: a dict containing the system utterance
@@ -74,8 +69,8 @@ class RecipeNLG(Service):
             dict with "sys_utterance" as key and the system utterance as value
         """
 
-        # don't know how to introduce randomness in NLG template, so for some actions,
-        # we don't use the nlg templates.
+        # AFAIK the NLG templates don't allow for randomly choosing a returned message, so for some actions,
+        # we don't use the nlg templates, but determine the output directly in the NLG service
         if sys_act is None or sys_act.type == SysActionType.Welcome:
             return random.choice([
                 'Hi! This is your friendly recipe bot, how can I help you?',
@@ -89,13 +84,14 @@ class RecipeNLG(Service):
                 'I\'m afraid I don\'t understand.'
             ])
         if sys_act.type == SysActionType.Bye:
-            return  random.choice(['Thank you, good bye.',
+            return random.choice(['Thank you, good bye.',
             'I hope I could be of any help, see you.',
             'Always glad to help. Bye!'
             ]) 
 
         if sys_act.type == SysActionType.NotFound:
-            self.logger.error(f"{self.policy_state_view.sys_act_history}")
+
+            # an example of using the policy state to give more accurate output
             if self.policy_state_view.match_last_sys_acts([SysActionType.NotFound, SysActionType.FoundTooMany]):
                 return "Sorry, that would narrow it down to 0 results."
 
@@ -122,10 +118,13 @@ class RecipeNLG(Service):
             return "I found no exact matches. But there are recipes that satisfy at least some of your constraints. Do you want to hear them?"
 
         if sys_act.type == SysActionType.FoundTooMany:
+
+            # another example of using the policy state to give more accurate output
             if self.policy_state_view.match_last_sys_acts([SysActionType.FoundTooMany, SysActionType.FoundTooMany]):
                 return random.choice(
                 ["I still found many recipes matching your criteria, please provide more information.",
                 "There are still too many recipes matching your request, please give me more information."])
+
             return random.choice(
                 ["I found many recipes, maybe you can give me some more information?",
                 "A lot of recipes are fitting your request. Can you give me some more information?"])
@@ -148,10 +147,3 @@ class RecipeNLG(Service):
         # self.logger.dialog_turn("System Action: " + message)
         return message
 
-
-        # elif sys_act.type == SysActionType.InformByName:
-        #     answer = sys_act.slot_values['answer']
-        #     return {'sys_utterance': answer }
-            
-        # else:
-        #     return {'sys_utterance': 'nothing defined for this sys act yet' }

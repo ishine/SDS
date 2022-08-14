@@ -75,6 +75,7 @@ class RecipeBST(Service):
             self._reset_informs(user_acts)
             self._reset_requests()
             self.bs["user_acts"] = self._get_all_usr_action_types(user_acts)
+            self.bs["input"]     = user_acts[0].text
 
             self.bs["num_matches"] = self.cnt_matching()
             self._handle_user_acts(user_acts)

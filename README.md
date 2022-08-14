@@ -103,7 +103,7 @@ Currently, the bots database is loaded into memory, so favorites are not persist
 8. I set the recipe as a favorite.
 9. Can you list my favorites?
 10. Your only favorite recipe is "Chocolate Mousse".
-11. Can you delete "Chocolate Mousse" from my favorites?
+11. Can you delete Chocolate Mousse from my favorites?
 12. I removed "Chocolate Mousse" from your favorites.
 11. Thanks, bye
 12. Good bye

@@ -2,7 +2,7 @@ import re
 import json
 import os
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 
 from utils import UserAct, UserActionType, DiasysLogger, SysAct, SysActionType, BeliefState
 from services.service import Service, PublishSubscribe
@@ -116,6 +116,17 @@ class RecipeNLU(Service):
         if re.search("(\\b|^| )((list|show)( me)? my favorite|what are my favorite)", user_utterance, flags=re.I):
             self.user_acts.append(UserAct(user_utterance, UserActionType.ListFavs))
 
+        # rating
+        # because the ratings in the database are star-based (1-5), we translate some other utterances to stars
+        if re.search("(\\b|^| )(that is (highly|well) rated|(that has|with) a (high|good) rating)", user_utterance, flags=re.I):
+            self.user_acts.append(UserAct(user_utterance, UserActionType.Inform, slot="rating", value="4"))
+
+        # preparation time
+        # analogous case to rating
+        if re.search("(\\b|^| )(takes little time|(quick|fast|uncomplicated) to (cook|prepare|make|do))", user_utterance, flags=re.I):
+            self.user_acts.append(UserAct(user_utterance, UserActionType.Inform, slot="prep_time", value="30"))
+        
+
 
         # If nothing else has been matched, see if the user chose a domain; otherwise if it's
         # not the first turn, it's a bad act
@@ -124,6 +135,11 @@ class RecipeNLU(Service):
                 # start of dialogue or no regex matched
                 self.user_acts.append(UserAct(text=user_utterance if user_utterance else "",
                                               act_type=UserActionType.Bad))
+
+
+
+
+
         self._assign_scores()
         self.logger.dialog_turn("User Actions: %s" % str(self.user_acts))
         result['user_acts'] = self.user_acts

@@ -24,7 +24,7 @@ from utils.beliefstate import BeliefState
 from utils.useract import UserActionType, UserAct
 from .models.recipe_req import RecipeReq
 from .models.recipe import Recipe
-from .policy import PolicyState, PolicyStateView
+from .policy import BotState, BotStateView
 from .nlu import UNK_ING
 
 
@@ -38,15 +38,15 @@ class RecipeBST(Service):
 
         self.logger                             = logger
         self.bs                                 = BeliefState(domain)
-        self.state : Optional[PolicyStateView]  = None
+        self.state : Optional[BotStateView]  = None
 
     
-    @PublishSubscribe(sub_topics=["policy_state"], pub_topics=[])
-    def policy_state_changed(self, policy_state: PolicyStateView = None):
+    @PublishSubscribe(sub_topics=["bot_state"], pub_topics=[])
+    def bot_state_changed(self, bot_state: BotStateView = None):
         """ Listen to new state from Policy. """
 
-        self.logger.info(f"Updating state to {policy_state.current()}")
-        self.state = policy_state
+        self.logger.info(f"Updating state to {bot_state.current()}")
+        self.state = bot_state
 
 
 
@@ -121,7 +121,7 @@ class RecipeBST(Service):
         slots = {act.slot for act in acts if act.type == UserActionType.Inform}
         for slot in [s for s in self.bs['informs']]:
             # special case: ingredients should not be replaced unless a recipe has already been chosen
-            if slot == "ingredients" and self.state != PolicyState.CHOSEN:
+            if slot == "ingredients" and self.state != BotState.CHOSEN:
                 continue
             if slot in slots:
                 del self.bs['informs'][slot]
@@ -183,7 +183,7 @@ class RecipeBST(Service):
                 if act.slot == 'name' and self.cnt_matching() == 1:
                     self.bs['chosen'] = self.matching()[0]
 
-            elif act.type == UserActionType.Deny and self.state.current() == PolicyState.LISTED_RAND:
+            elif act.type == UserActionType.Deny and self.state.current() == BotState.LISTED_RAND:
                 self.bs['chosen'] = self.domain.get_random()
             elif act.type == UserActionType.RequestRandom:
                 self.bs['chosen'] = self.domain.get_random()

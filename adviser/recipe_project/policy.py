@@ -32,7 +32,8 @@ from collections import defaultdict
 
 import random
 
-class PolicyState(Enum):
+class BotState(Enum):
+    """ Represents the bots internal state. """
     
     START           = 0
     LISTED_FAV      = 1
@@ -41,35 +42,47 @@ class PolicyState(Enum):
     CHOSEN          = 4
     ASKED_FOR_PART  = 5
 
-class PolicyStateView:
+class BotStateView:
+
+    """ Wrapper around the bots state + a history of sys acts, with some convenience methods. """
 
     def __init__(self):
 
-        self.state_history   : List[PolicyState]    = []
-        self.current_state   : PolicyState          = PolicyState.START
+        self.state_history   : List[BotState]       = []
+        self.current_state   : BotState             = BotState.START
         self.sys_act_history : List[SysActionType]  = []
     
-    def update(self, new_policy_state: Optional[PolicyState], new_sys_act: SysActionType):
-        if self.current_state != new_policy_state and new_policy_state is not None:
+    def update(self, new_bot_state: Optional[BotState], new_sys_act: SysActionType):
+        """ Update the internal state. If new_bot_state is None, old state is kept. """
+
+        if self.current_state != new_bot_state and new_bot_state is not None:
             self.state_history.append(self.current_state)
-            self.current_state = new_policy_state
+            self.current_state = new_bot_state
 
         self.sys_act_history.append(new_sys_act)
     
-    def current(self) -> PolicyState:
+    def current(self) -> BotState:
+        """ Get the current bot state. """
         return self.current_state
 
-    def last_state(self) -> Optional[PolicyState]:
+    def previous_state(self) -> Optional[BotState]:
+        """ Get the previous bot state. """
         if len(self.state_history) > 0:
             return self.state_history[-1]
         return None
 
     def last_sys_act(self) -> Optional[SysActionType]:
+        """ Get the last sys act. """
         if len(self.sys_act_history) > 0:
             return self.sys_act_history[-1]
         return None
     
     def match_last_sys_acts(self, to_match: List[SysActionType]) -> bool:
+        """ 
+            Convenience method to pattern match against the sys act history. 
+            This will start with the last entry in the sys act history, and try to match each of the given sys acts.
+            Returns True if all given sys acts matched.
+        """
         if len(self.sys_act_history) < len(to_match):
             return False
         for ix, a in enumerate(to_match):
@@ -85,11 +98,10 @@ class RecipePolicy(Service):
     def __init__(self, domain: RecipeDomain, logger: DiasysLogger = DiasysLogger()):
         Service.__init__(self, domain=domain, debug_logger=logger)
 
-        self.state      = PolicyStateView()
+        self.state      = BotStateView()
 
     
-
-    @PublishSubscribe(sub_topics=["beliefstate"], pub_topics=["sys_act", "policy_state"])
+    @PublishSubscribe(sub_topics=["beliefstate"], pub_topics=["sys_act", "bot_state"])
     def generate_sys_acts(self, beliefstate: BeliefState) -> dict(sys_acts=List[SysAct]):
         """Generates system acts by looking up answers to the given user question.
         Returns:
@@ -103,8 +115,10 @@ class RecipePolicy(Service):
         num_matches     = bs['num_matches']
 
         self.debug_logger.info(f"num_matches={num_matches}, informs.ingredients={len(informs.get('ingredients', []))}")
+
         # current user act types
         user_acts       = bs['user_acts']
+
 
         if user_acts is None or len(user_acts) == 0:
             return self.answer(None, SysActionType.Welcome)
@@ -116,10 +130,10 @@ class RecipePolicy(Service):
             return self.answer(None, SysActionType.Welcome)
 
         if ua == UserActionType.Thanks:
-            return self.answer(PolicyState.START, SysActionType.RequestMore)
+            return self.answer(BotState.START, SysActionType.RequestMore)
 
         if ua == UserActionType.Bye:
-            return self.answer(PolicyState.START, SysActionType.Bye)
+            return self.answer(BotState.START, SysActionType.Bye)
 
         if ua == UserActionType.Bad:
             return self.answer(None, SysActionType.Bad)
@@ -127,17 +141,17 @@ class RecipePolicy(Service):
 
         # user was presented some selection (2-4) and now picks one
         if ua == UserActionType.PickFirst and num_matches > 0 and num_matches < 5:
-            return self.answer(PolicyState.CHOSEN, SysActionType.Select)
+            return self.answer(BotState.CHOSEN, SysActionType.Select)
         if ua == UserActionType.PickSecond and num_matches > 0 and num_matches < 5:
-            return self.answer(PolicyState.CHOSEN, SysActionType.Select)
+            return self.answer(BotState.CHOSEN, SysActionType.Select)
         if ua == UserActionType.PickLast and num_matches > 0 and num_matches < 5:
-            return self.answer(PolicyState.CHOSEN, SysActionType.Select)
+            return self.answer(BotState.CHOSEN, SysActionType.Select)
         if ua == UserActionType.Affirm and self._has_chosen(bs):
-            return self.answer(PolicyState.CHOSEN, SysActionType.Select)
+            return self.answer(BotState.CHOSEN, SysActionType.Select)
 
         if ua == UserActionType.RequestRandom:
             return self._suggest_one(bs['chosen'])
-        if ua == UserActionType.Deny and self.state.current() == PolicyState.LISTED_RAND:
+        if ua == UserActionType.Deny and self.state.current() == BotState.LISTED_RAND:
             return self._suggest_one(bs['chosen'])
 
         if ua == UserActionType.ListFavs:
@@ -147,37 +161,35 @@ class RecipePolicy(Service):
             if len(favs) == 0:
                 m = "You have not set any favorites yet."
             elif len(favs) == 1:
-                st  = PolicyState.LISTED_FAV
+                st  = BotState.LISTED_FAV
                 m   = f"Your only favorite recipe is {favs[0]}."
             elif len(favs) == 2:
-                st  = PolicyState.LISTED_FAV
+                st  = BotState.LISTED_FAV
                 m   = f"Your have set 2 recipes as favorites, {favs[0]} and {favs[1]}."
             else:
-                st  = PolicyState.LISTED_FAV
+                st  = BotState.LISTED_FAV
                 m   = "Your favorites are: " + ", ".join([r.name for r in favs]) + "."
             
 
             return self.answer(st, SysActionType.Inform, slot_values={'message': m})
 
-
-
         # save as favorite 
         if ua == UserActionType.SaveAsFav:
-            if not self.state.current() == PolicyState.CHOSEN:
-                return self.answer(PolicyState.CHOSEN, SysActionType.NotYetChosen)
+            if not self.state.current() == BotState.CHOSEN:
+                return self.answer(BotState.CHOSEN, SysActionType.NotYetChosen)
 
             self.domain.set_favorite(self.bs['chosen'].name)
-            return self.answer(PolicyState.CHOSEN, SysActionType.Inform, slot_values={'message': "I set the recipe as a favorite."})
+            return self.answer(BotState.CHOSEN, SysActionType.Inform, slot_values={'message': "I set the recipe as a favorite."})
         # remove from favorites 
         if ua == UserActionType.RemoveFromFavs:
-            if not self.state.current() == PolicyState.CHOSEN:
+            if not self.state.current() == BotState.CHOSEN:
                 return self.answer(None, SysActionType.NotYetChosen)
             self.domain.unset_favorite(self.bs['chosen'].name)
             return self.answer(None, SysActionType.Inform, slot_values={'message': "I removed the recipe from your favorites."})
         
         if ua == UserActionType.Request:
 
-            if self.state.current() not in (PolicyState.CHOSEN, PolicyState.LISTED_RAND):
+            if self.state.current() not in (BotState.CHOSEN, BotState.LISTED_RAND):
                 return self.answer(None, SysActionType.NotYetChosen)
 
 
@@ -201,7 +213,7 @@ class RecipePolicy(Service):
                 m = self._inform_prep_time(chosen.prep_time)
             return self.answer(None, SysActionType.Inform, slot_values={'message': m})
 
-        if ua == UserActionType.Affirm and self.state.current() == PolicyState.ASKED_FOR_PART:
+        if ua == UserActionType.Affirm and self.state.current() == BotState.ASKED_FOR_PART:
 
             req     = RecipeReq.from_informs(informs)
             found   = self.domain.find_recipes(req, partial=True)
@@ -213,8 +225,8 @@ class RecipePolicy(Service):
                 return self._narrowed_down_to_one(found[0])
             return self._found_some(found)
             
-        if ua == UserActionType.Deny and self.state.current() == PolicyState.ASKED_FOR_PART:
-            return self.answer(PolicyState.START, SysActionType.StartOver)
+        if ua == UserActionType.Deny and self.state.current() == BotState.ASKED_FOR_PART:
+            return self.answer(BotState.START, SysActionType.StartOver)
 
         if ua == UserActionType.Inform:
 
@@ -230,12 +242,12 @@ class RecipePolicy(Service):
                 if sum(len(v.keys()) for v in informs.values()) > 1:
                     partially_matching = self.domain.find_recipes(req, partial = True)
                     if len(partially_matching) > 0 and len(partially_matching) < 100:
-                        return self.answer(PolicyState.ASKED_FOR_PART, SysActionType.AskForPartialSearch)
+                        return self.answer(BotState.ASKED_FOR_PART, SysActionType.AskForPartialSearch)
 
                 return self._not_found()
             if cnt == 1:
                 if 'name' in informs and len(informs['name'].keys()) > 0 and list(informs['name'].keys())[0].casefold() == found[0].name.casefold():
-                    return self.answer(PolicyState.CHOSEN, SysActionType.Select)
+                    return self.answer(BotState.CHOSEN, SysActionType.Select)
 
                 if not self._has_chosen(bs):
                     return self._narrowed_down_to_one(found[0])
@@ -248,13 +260,13 @@ class RecipePolicy(Service):
             return self._found_too_many()
 
         if ua == UserActionType.StartOver:
-            return self.answer(PolicyState.START, SysActionType.StartOver)
+            return self.answer(BotState.START, SysActionType.StartOver)
 
         return self.answer(None, SysActionType.Bad)
 
-    def answer(self, new_policy_state: Optional[PolicyState], sys_action_type: SysActionType, slot_values: Optional[dict] = None) -> dict:
-        self.state.update(new_policy_state, sys_action_type)
-        return { 'policy_state': self.state, 'sys_act': SysAct(sys_action_type, slot_values)}
+    def answer(self, new_bot_state: Optional[BotState], sys_action_type: SysActionType, slot_values: Optional[dict] = None) -> dict:
+        self.state.update(new_bot_state, sys_action_type)
+        return { 'bot_state': self.state, 'sys_act': SysAct(sys_action_type, slot_values)}
 
     def _has_chosen(self, bs: BeliefState) -> bool:
         """ Check in the beliefstate if the dialog partner has already decided on a recipe. """
@@ -270,24 +282,24 @@ class RecipePolicy(Service):
     def _found_some(self, recipes: List[Recipe]) -> dict:
         
         if len(recipes) == 2:
-            return self.answer(PolicyState.LISTED_FOUND, SysActionType.FoundSome, slot_values={'names': f"{recipes[0].name} or {recipes[1].name}"})
-        return self.answer(PolicyState.LISTED_FOUND, SysActionType.FoundSome, slot_values={'names': ", ".join([r.name for r in recipes])})
+            return self.answer(BotState.LISTED_FOUND, SysActionType.FoundSome, slot_values={'names': f"{recipes[0].name} or {recipes[1].name}"})
+        return self.answer(BotState.LISTED_FOUND, SysActionType.FoundSome, slot_values={'names': ", ".join([r.name for r in recipes])})
 
     def _found_one(self, recipe: Recipe) -> dict:
 
-        return self.answer(PolicyState.LISTED_FOUND, SysActionType.FoundOne, slot_values={'name': recipe.name})
+        return self.answer(BotState.LISTED_FOUND, SysActionType.FoundOne, slot_values={'name': recipe.name})
 
     def _found_too_many(self) -> dict:
 
-        return self.answer(PolicyState.LISTED_FOUND, SysActionType.FoundTooMany)
+        return self.answer(BotState.LISTED_FOUND, SysActionType.FoundTooMany)
 
     def _narrowed_down_to_one(self, recipe: Recipe) -> dict:
 
-        return self.answer(PolicyState.LISTED_FOUND, SysActionType.NarrowedDownToOne, slot_values={'name': recipe.name})
+        return self.answer(BotState.LISTED_FOUND, SysActionType.NarrowedDownToOne, slot_values={'name': recipe.name})
 
     def _suggest_one(self, recipe: Recipe) -> dict:
 
-        return self.answer(PolicyState.LISTED_RAND, SysActionType.Inform, slot_values={'message': f"How about {recipe.name}?"})
+        return self.answer(BotState.LISTED_RAND, SysActionType.Inform, slot_values={'message': f"How about {recipe.name}?"})
 
 
     #

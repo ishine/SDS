@@ -21,7 +21,7 @@ from utils import DiasysLogger
 from utils import SysAct, SysActionType
 from services.service import Service, PublishSubscribe
 from services.nlg.templates.templatefile import TemplateFile
-from .policy import PolicyStateView, PolicyState
+from .policy import BotStateView, BotState
 from typing import Optional
 import random
 import os
@@ -42,21 +42,21 @@ class RecipeNLG(Service):
                     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                     'resources/nlg_templates/%sMessages.nlg' % self.domain.get_domain_name())
         
-        self.policy_state_view : Optional[PolicyStateView]  = None
+        self.bot_state_view : Optional[BotStateView]  = None
         self.templates                                      = TemplateFile(self.template_filename, self.domain)
 
-    @PublishSubscribe(sub_topics=["sys_act", "policy_state"], pub_topics=["sys_utterance"])
-    def publish_system_utterance(self, sys_act: SysAct = None, policy_state: PolicyStateView = None) -> dict(sys_utterance=str):
+    @PublishSubscribe(sub_topics=["sys_act", "bot_state"], pub_topics=["sys_utterance"])
+    def publish_system_utterance(self, sys_act: SysAct = None, bot_state: BotStateView = None) -> dict(sys_utterance=str):
         """Generates the system utterance and publishes it.
 
         Args:
             sys_act (SysAct): The system act published by the policy
-            policy_state (SysAct): Represents the systems state 
+            bot_state (SysAct): Represents the systems state 
 
         Returns:
             dict: a dict containing the system utterance
         """
-        self.policy_state_view = policy_state
+        self.bot_state_view = bot_state
         return {'sys_utterance': self.generate_system_utterance(sys_act)}
 
     def generate_system_utterance(self, sys_act: SysAct = None) -> dict(sys_utterance=str):
@@ -92,7 +92,7 @@ class RecipeNLG(Service):
         if sys_act.type == SysActionType.NotFound:
 
             # an example of using the policy state to give more accurate output
-            if self.policy_state_view.match_last_sys_acts([SysActionType.NotFound, SysActionType.FoundTooMany]):
+            if self.bot_state_view.match_last_sys_acts([SysActionType.NotFound, SysActionType.FoundTooMany]):
                 return "Sorry, that would narrow it down to 0 results."
 
             return random.choice(
@@ -120,7 +120,7 @@ class RecipeNLG(Service):
         if sys_act.type == SysActionType.FoundTooMany:
 
             # another example of using the policy state to give more accurate output
-            if self.policy_state_view.match_last_sys_acts([SysActionType.FoundTooMany, SysActionType.FoundTooMany]):
+            if self.bot_state_view.match_last_sys_acts([SysActionType.FoundTooMany, SysActionType.FoundTooMany]):
                 return random.choice(
                 ["I still found many recipes matching your criteria, please provide more information.",
                 "There are still too many recipes matching your request, please give me more information."])

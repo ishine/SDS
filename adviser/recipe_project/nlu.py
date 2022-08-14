@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from utils import UserAct, UserActionType, DiasysLogger, SysAct, SysActionType, BeliefState
 from services.service import Service, PublishSubscribe
-from .policy import PolicyStateView
+from .policy import BotStateView
 
 def get_root_dir():
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -32,7 +32,7 @@ class RecipeNLU(Service):
         self.base_folder                                    = os.path.join(get_root_dir(), 'resources', 'nlu_regexes')
 
         # having the current system state available can be helpful in some cases
-        self.policy_state_view : Optional[PolicyStateView]  = None
+        self.bot_state_view : Optional[BotStateView]  = None
 
         # Holds a set of all ingredients occurring in the domain db after initialization
         self.ingredients                                    = set()
@@ -87,8 +87,8 @@ class RecipeNLU(Service):
                 self.user_acts.append(UserAct(user_utterance, UserActionType.Bye))
         
         # Case: user selected recipe, denies wanting any more information
-        if (self.policy_state_view is not None 
-        and self.policy_state_view.last_sys_act() == SysActionType.Select 
+        if (self.bot_state_view is not None 
+        and self.bot_state_view.last_sys_act() == SysActionType.Select 
         and re.match("(no ?)?(thanks|thank you)?", user_utterance.strip(), flags=re.I)):
             self.user_acts.append(UserAct(user_utterance, UserActionType.Bye))
 
@@ -124,7 +124,7 @@ class RecipeNLU(Service):
         # If nothing else has been matched, see if the user chose a domain; otherwise if it's
         # not the first turn, it's a bad act
         if len(self.user_acts) == 0:
-            if self.policy_state_view is not None and self.policy_state_view.last_sys_act() is not None:
+            if self.bot_state_view is not None and self.bot_state_view.last_sys_act() is not None:
                 # start of dialogue or no regex matched
                 self.user_acts.append(UserAct(text=user_utterance if user_utterance else "", act_type=UserActionType.Bad))
 
@@ -135,11 +135,11 @@ class RecipeNLU(Service):
 
         return result
 
-    @PublishSubscribe(sub_topics=["policy_state"])
-    def _update_policy_state(self, policy_state: PolicyStateView):
+    @PublishSubscribe(sub_topics=["bot_state"])
+    def _update_bot_state(self, bot_state: BotStateView):
         """ Listen to system state changes. """
 
-        self.policy_state_view = policy_state
+        self.bot_state_view = bot_state
 
     def _match_general_act(self, user_utterance: str):
         """

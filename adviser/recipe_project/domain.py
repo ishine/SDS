@@ -124,6 +124,13 @@ class RecipeDomain(JSONLookupDomain):
 
         return res_set
 
+    def get_all_recipe_names(self) -> Set[str]:
+        """ Returns a list of all recipe names in the database """
+
+        q           = "SELECT DISTINCT name from {}".format(self.get_domain_name())
+        names       = self.query_db(q)
+        return set(r['name'] for r in names)
+
     def get_requestable_slots(self) -> List[str]:
         """ Returns a list of all slots requestable by the user. """
         return self.ontology_json['requestable']
